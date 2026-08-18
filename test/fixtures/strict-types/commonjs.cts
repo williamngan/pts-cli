@@ -1,0 +1,16 @@
+import adapter = require("skia-pts-canvas");
+
+const space = new adapter.SkiaCanvasSpace(20, 10);
+const form: adapter.SkiaCanvasForm = space.getForm();
+const typedSpace: adapter.SkiaCanvasSpace = form.space;
+
+form.fill("#fff").rect([
+  [0, 0],
+  [20, 10],
+]);
+
+const output: Promise<string> = space.toURL("jpeg", {
+  quality: 0.9,
+});
+void output;
+void typedSpace;
