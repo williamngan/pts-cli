@@ -27,7 +27,7 @@ async function temporaryDirectory(): Promise<string> {
   return directory;
 }
 
-describe("raster export", () => {
+describe("canvas export", () => {
   it("exports PNG, JPEG, WebP, raw pixels, and data URLs", async () => {
     const space = new SkiaCanvasSpace(6, 4, {
       background: "#ff0000",
@@ -101,25 +101,70 @@ describe("raster export", () => {
       background: "#010203",
     });
     const pngPath = join(directory, "scene.png");
+    const svgPath = join(directory, "scene.svg");
     const ambiguousPath = join(directory, "scene.bin");
 
     await space.toFile(pngPath);
+    await space.toFile(svgPath, { outline: false });
     await space.toFile(ambiguousPath, { format: "webp" });
 
     const png = await readFile(pngPath);
+    const svg = await readFile(svgPath, "utf8");
     const webp = await readFile(ambiguousPath);
     expect(pngDimensions(png)).toEqual([4, 3]);
+    expect(svg).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
+    expect(svg).toContain('width="4" height="3"');
     expect(webp.subarray(8, 12).toString()).toBe("WEBP");
+  });
+
+  it("exports vector geometry and both SVG text modes", async () => {
+    const space = new SkiaCanvasSpace(80, 40);
+    const form = space.getForm();
+    space.add(() => {
+      form
+        .fillOnly("#ff0000")
+        .rect([
+          [2, 2],
+          [20, 20],
+        ])
+        .fillOnly("#111111")
+        .font(12, "bold")
+        .text([25, 18], "Pts SVG");
+    });
+    space.renderFrame();
+
+    const [preserved, outlined, url] = await Promise.all([
+      space.toBuffer("svg", { outline: false }),
+      space.toBuffer("svg", { outline: true }),
+      space.toURL("svg", { outline: false }),
+    ]);
+    const preservedText = preserved.toString("utf8");
+    const outlinedText = outlined.toString("utf8");
+
+    expect(preservedText).toContain('width="80" height="40"');
+    expect(preservedText).toContain("Pts SVG");
+    expect(preservedText).toMatch(/<(path|rect)\b/);
+    expect(outlinedText).not.toContain("Pts SVG");
+    expect(outlinedText).toContain("<path");
+    expect(url).toMatch(/^data:image\/svg\+xml;base64,/);
+  });
+
+  it("exports the same retained scene independent of output order", async () => {
+    const space = new SkiaCanvasSpace(12, 8, { background: "#abcdef" });
+    const firstPng = await space.toBuffer("png");
+    const firstSvg = await space.toBuffer("svg");
+    const secondSvg = await space.toBuffer("svg");
+    const secondPng = await space.toBuffer("png");
+
+    expect(secondPng).toEqual(firstPng);
+    expect(secondSvg).toEqual(firstSvg);
   });
 
   it("validates output formats and options", async () => {
     const space = new SkiaCanvasSpace();
 
-    await expect(space.toBuffer("svg" as RasterFormat)).rejects.toThrow(
-      /deferred/,
-    );
     await expect(space.toBuffer("pdf" as RasterFormat)).rejects.toThrow(
-      /deferred/,
+      /not supported/,
     );
     await expect(space.toBuffer("png", { density: 1.5 })).rejects.toThrow(
       /density/,
@@ -136,6 +181,12 @@ describe("raster export", () => {
     await expect(space.toFile("scene.unknown")).rejects.toThrow(
       /provide options.format/,
     );
+    await expect(
+      space.toBuffer("svg", { quality: 0.5 } as { outline?: boolean }),
+    ).rejects.toThrow(/not valid/);
+    await expect(
+      space.toBuffer("png", { outline: true } as { density?: number }),
+    ).rejects.toThrow(/not valid/);
     await expect(space.toURL("raw" as "png")).rejects.toThrow(/Raw pixels/);
   });
 });

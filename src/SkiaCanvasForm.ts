@@ -4,6 +4,7 @@ import type { CanvasRenderingContext2D as NativeContext2D } from "skia-canvas";
 
 import { resetPtsStyleCache } from "./compatibility.js";
 import { UnsupportedOperationError } from "./errors.js";
+import { isLegacyImageCarrier, LEGACY_IMAGE_SOURCE } from "./legacyImage.js";
 import type { SkiaCanvasSpace } from "./SkiaCanvasSpace.js";
 import type {
   SkiaCanvasContext2D,
@@ -157,10 +158,13 @@ export class SkiaCanvasForm extends CanvasForm<any> {
     image: CanvasImageSource | Img | SkiaCanvasImageSource,
     original?: PtLikeIterable,
   ): this {
+    const isLegacy = isLegacyImageCarrier(image);
+    const legacySource = isLegacy ? image[LEGACY_IMAGE_SOURCE] : undefined;
+    if (isLegacy && legacySource === undefined) return this;
     CanvasForm.image(
       this._ctx,
       ptOrRect,
-      image as CanvasImageSource | Img,
+      (legacySource ?? image) as CanvasImageSource | Img,
       original,
     );
     return this;

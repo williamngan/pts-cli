@@ -1,0 +1,4 @@
+{
+  "schemaVersion": 1,
+  "events": [{ "at": 17, "type": "resize", "width": 300, "height": 180 }]
+}

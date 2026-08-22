@@ -1,7 +1,7 @@
 {
-  "name": "skia-pts-canvas",
+  "name": "pts-cli",
   "version": "0.1.0",
-  "description": "A deterministic Pts canvas adapter for rendering raster images with skia-canvas in Node.js",
+  "description": "Render portable and classic Pts scenes to PNG and SVG with a deterministic Node.js CLI and API",
   "license": "Apache-2.0",
   "author": "William Ngan",
   "repository": {
@@ -15,6 +15,9 @@
   "type": "module",
   "sideEffects": false,
   "private": true,
+  "bin": {
+    "ptsjs": "./dist/cli.mjs"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
@@ -28,9 +31,40 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./scene": {
+      "import": {
+        "types": "./dist/scene.d.mts",
+        "default": "./dist/scene.mjs"
+      },
+      "require": {
+        "types": "./dist/scene.d.cts",
+        "default": "./dist/scene.cjs"
+      }
+    },
+    "./browser": {
+      "import": {
+        "types": "./dist/browser.d.mts",
+        "default": "./dist/browser.mjs"
+      },
+      "require": {
+        "types": "./dist/browser.d.cts",
+        "default": "./dist/browser.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "scene": [
+        "dist/scene.d.mts"
+      ],
+      "browser": [
+        "dist/browser.d.mts"
+      ]
     }
   },
   "files": [
+    "compatibility",
     "dist",
     "CHANGELOG.md",
     "LICENSE",
@@ -42,21 +76,27 @@
   "packageManager": "pnpm@11.21.0",
   "scripts": {
     "build": "tsdown",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:types && pnpm test:pack && pnpm package:check",
-    "example": "pnpm build && node examples/basic-card.mjs",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:browser && pnpm test:integration && pnpm test:types && pnpm test:pack && pnpm package:check",
+    "example": "pnpm build && node scripts/render-example.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "package:check": "publint && attw --pack .",
     "test": "vitest run",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:compatibility": "node scripts/test-compatibility.mjs",
+    "test:integration": "node scripts/test-cli.mjs",
     "test:pack": "node scripts/test-packed.mjs",
     "test:types": "tsc -p test/fixtures/strict-types/tsconfig.nodenext.json && tsc -p test/fixtures/strict-types/tsconfig.node16.json",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "pts": "github:williamngan/pts#revamp",
-    "skia-canvas": "^3.0.8"
+    "pts": "github:williamngan/pts#revamp"
+  },
+  "dependencies": {
+    "acorn": "8.18.0",
+    "skia-canvas": "3.0.8"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
@@ -64,10 +104,10 @@
     "@types/node": "24.5.2",
     "eslint": "10.8.1",
     "globals": "17.9.0",
+    "playwright": "1.62.1",
     "prettier": "3.9.6",
     "pts": "github:williamngan/pts#revamp",
     "publint": "0.3.23",
-    "skia-canvas": "3.0.8",
     "tsdown": "0.22.14",
     "typescript": "5.9.3",
     "typescript-eslint": "8.66.0",

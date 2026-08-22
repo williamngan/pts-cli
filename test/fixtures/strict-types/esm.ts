@@ -1,8 +1,53 @@
 import {
+  renderScene,
   SkiaCanvasSpace,
   type RasterFormat,
   type SkiaCanvasForm,
-} from "skia-pts-canvas";
+} from "pts-cli";
+import { mountScene } from "pts-cli/browser";
+import { defineScene } from "pts-cli/scene";
+
+const scene = defineScene({
+  apiVersion: 1,
+  width: 120,
+  height: 80,
+  async setup({ Pts, space: sceneSpace, form: sceneForm, assets }) {
+    const image = await assets.image("asset.png");
+    sceneForm.image(
+      [
+        [0, 0],
+        [10, 10],
+      ],
+      image,
+    );
+    sceneSpace.add(() => {
+      sceneForm
+        .fillOnly("#f03")
+        .circle(Pts.Circle.fromCenter(sceneSpace.pointer, 4));
+    });
+  },
+});
+
+void mountScene(scene, { target: document.body, autoplay: false });
+const rendered = renderScene("scene.mjs", {
+  outputs: [
+    { format: "png", density: 2 },
+    { format: "svg", textMode: "outline" },
+  ],
+});
+void rendered;
+
+// @ts-expect-error Output options are discriminated by format.
+renderScene("scene.mjs", { outputs: [{ format: "svg", quality: 0.8 }] });
+
+defineScene({
+  setup() {},
+  // @ts-expect-error Scene extensions belong under metadata.
+  output: "scene.png",
+});
+
+// @ts-expect-error Portable dimensions are supplied as a width/height pair.
+defineScene({ width: 120, setup() {} });
 
 const space = new SkiaCanvasSpace(120, 80, {
   background: "transparent",
@@ -27,5 +72,8 @@ void typedForm;
 void typedSpace;
 void aliasSpace;
 
-// @ts-expect-error Vector formats are deliberately excluded.
-space.toBuffer("svg");
+const svg: Promise<Buffer> = space.toBuffer("svg", { outline: true });
+void svg;
+
+// @ts-expect-error Raster quality is not an SVG option.
+space.toBuffer("svg", { quality: 0.8 });

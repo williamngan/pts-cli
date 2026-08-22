@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>pts-cli browser smoke</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "pts": "/node_modules/pts/dist/index.mjs"
+        }
+      }
+    </script>
+    <style>
+      #pt {
+        width: 64px;
+        height: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="pt"></div>
+    <output id="result">pending</output>
+    <script type="module">
+      import * as Pts from "pts";
+      import { mountScene } from "/dist/browser.mjs";
+
+      const calls = [];
+      let cleanupCalls = 0;
+      let functionThisIsPlayer = false;
+      const scene = {
+        apiVersion: 1,
+        width: 64,
+        height: 40,
+        background: "#010203",
+        async setup({ Pts: contextPts, space, form, params, assets }) {
+          if (contextPts !== Pts) throw new Error("Pts namespace mismatch");
+          if (!(space instanceof Pts.CanvasSpace)) {
+            throw new Error("space is not a CanvasSpace");
+          }
+          if (form.space !== space) throw new Error("form/space mismatch");
+          if (params.label !== "browser") throw new Error("params mismatch");
+          await new Promise((resolve) => setTimeout(resolve, 20));
+          const imageRequest = assets.image("/test/fixtures/assets/square.svg");
+          if (
+            assets.image("/test/fixtures/assets/square.svg") !== imageRequest
+          ) {
+            throw new Error("browser image requests were not deduplicated");
+          }
+          const image = await imageRequest;
+
+          const first = {
+            resize() {
+              calls.push("first:resize");
+              space.add({
+                resize() {
+                  calls.push("from-resize:resize");
+                },
+                start() {
+                  calls.push("from-resize:start");
+                },
+              });
+            },
+            start() {
+              calls.push("first:start");
+              space.add({
+                resize() {
+                  calls.push("from-start:resize");
+                },
+                start() {
+                  calls.push("from-start:start");
+                },
+              });
+            },
+            animate() {
+              form.fillOnly("#00ff00").rect([
+                [0, 0],
+                [64, 40],
+              ]);
+              form.image(
+                [
+                  [4, 4],
+                  [12, 12],
+                ],
+                image,
+              );
+            },
+          };
+          const second = {
+            resize() {
+              calls.push("second:resize");
+            },
+            start() {
+              calls.push("second:start");
+            },
+          };
+          const removed = {
+            resize() {
+              calls.push("removed:resize");
+            },
+            start() {
+              calls.push("removed:start");
+            },
+          };
+          const replaced = { animateID: "duplicate" };
+          const replacement = {
+            animateID: "duplicate",
+            resize() {
+              calls.push("replacement:resize");
+            },
+            start() {
+              calls.push("replacement:start");
+            },
+          };
+          const functionPlayer = function () {
+            functionThisIsPlayer = this.animate === functionPlayer;
+          };
+
+          space.add(first);
+          space.add(second);
+          space.add(removed).remove(removed);
+          space.add(replaced).add(replacement);
+          space.add(functionPlayer);
+          return () => {
+            cleanupCalls += 1;
+          };
+        },
+      };
+
+      try {
+        const mounted = await mountScene(scene, {
+          target: "#pt",
+          resize: false,
+          retina: false,
+          autoplay: false,
+          bindMouse: false,
+          bindTouch: false,
+          params: { label: "browser" },
+          assetBaseURL: import.meta.url,
+        });
+        const expected = [
+          "first:resize",
+          "second:resize",
+          "replacement:resize",
+          "first:start",
+          "second:start",
+          "replacement:start",
+          "from-resize:resize",
+          "from-start:resize",
+          "from-resize:start",
+          "from-start:start",
+        ];
+        if (JSON.stringify(calls) !== JSON.stringify(expected)) {
+          throw new Error("lifecycle mismatch: " + JSON.stringify(calls));
+        }
+
+        mounted.space.add({
+          resize() {
+            calls.push("late:resize");
+          },
+          start() {
+            calls.push("late:start");
+          },
+        });
+        if (calls.at(-1) !== "late:resize" || calls.includes("late:start")) {
+          throw new Error("late-add policy mismatch");
+        }
+
+        mounted.space.playOnce(0);
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        );
+        if (!functionThisIsPlayer) throw new Error("function this mismatch");
+        await mounted.dispose();
+        await mounted.dispose();
+        if (cleanupCalls !== 1) throw new Error("cleanup was not idempotent");
+
+        document.body.dataset.status = "passed";
+        document.querySelector("#result").textContent = "browser smoke passed";
+      } catch (error) {
+        document.body.dataset.status = "failed";
+        document.querySelector("#result").textContent =
+          error instanceof Error ? error.stack : String(error);
+      }
+    </script>
+  </body>
+</html>

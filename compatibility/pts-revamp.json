@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "pts": {
+    "branch": "revamp",
+    "commit": "77420f143928d614766f13d56b2a8d7b00c44b24",
+    "version": "0.12.9"
+  },
+  "demos": {
+    "canvasform.composite.js": {
+      "status": "supported",
+      "sourceSha256": "5f5ca53df024038fd5ae607ce92823f4de51d741646c865fa7fe44bc63f2fdc8",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "canvasform.gradient.js": {
+      "status": "supported",
+      "sourceSha256": "cf16e6c3de1f441adfafe0ed3a52323b4f6689076638f2a548afec1f1205d3f7",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "canvasform.textBox.js": {
+      "status": "supported",
+      "sourceSha256": "f6b5f50ba4539e3f5cfd1512d55eaf153d1a7cc68c4ff79ab97c1562c0a7f513",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "canvasspace.action.js": {
+      "status": "supported-with-input",
+      "sourceSha256": "0186e2e7f32c2bf1707c318a34d80f1f93627b1faa3d7a623a6453459dfe8eaa",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "events": "events/canvasspace.action.json",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "canvasspace.resize.js": {
+      "status": "supported-with-input",
+      "sourceSha256": "f53ad2811b9a7c98dcce7c328ee0456f7f611a4bb61509762145b6597d38b80c",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "events": "events/canvasspace.resize.json",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "circle.intersectCircle2D.js": {
+      "status": "supported",
+      "sourceSha256": "62f1d9157405ed26d43a0f6fd5c39d9b51ce1818100a7f19871ba3af8a0ebe4f",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "color.HSLtoRGB.js": {
+      "status": "supported",
+      "sourceSha256": "d56077fda8fdb777c3f16a6dfa53edfd39db1508a5636ce021cdd0c27651fe25",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "create.delaunay.js": {
+      "status": "supported",
+      "sourceSha256": "a42da24b04cd47ccfaff11c8fe47518d6345d0dbc0beca9fd24286cb9364a413",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "curve.bezier.js": {
+      "status": "supported",
+      "sourceSha256": "0a977d49796e08d3540f8375d7e5d304d2b4771848e1c0564e8878372297ee4d",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "guide.getting_started_1.js": {
+      "status": "supported",
+      "sourceSha256": "89e15fff6698fc9e44d78033fa76a7da7ea6e016c07f2fcc539ca1c9822469d2",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "guide.space_form.js": {
+      "status": "supported",
+      "sourceSha256": "aea16bcf0bec958ab3d15d80a72c43b19e63c8046690bc6d7f2469d689794517",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "guide.tempo_stagger.js": {
+      "status": "supported",
+      "sourceSha256": "e464347f309615b678724e39f224ff1a57058d72a0b0bd128eb15daae8b4587f",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 12,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "physics.particles.js": {
+      "status": "supported",
+      "sourceSha256": "32984eb4058a4dbe2494de8664afb9a3e982341a964f5842e1dd74da7d51e222",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 12,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "pts.quickStart.js": {
+      "status": "supported",
+      "sourceSha256": "0a4dad0c1a3e0c601a4fde6f1d3dfb42a716a192d398c9ff0471632da8db36f9",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "template.js": {
+      "status": "supported",
+      "sourceSha256": "0e5b4ba4a1450604a5dbf7df223a1303a4d52d56dd6fa990dc4e1476d546aac1",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "triangle.incircle.js": {
+      "status": "supported",
+      "sourceSha256": "2908d9e103d521ac44ebe8484809eb520ec5fef6cd9a3e06086448142e9c8664",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "ui.track.js": {
+      "status": "supported-with-input",
+      "sourceSha256": "eae884ae088e21884a6f6bc69bea041e98364d9cfa8e5cf2da2b37c0d80348a1",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "events": "events/ui.track.json",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+    },
+    "guide.image_load.js": {
+      "status": "supported",
+      "sourceSha256": "453d92b887867779ac74909177d5f7cf6d762bd5e2fbda9fc1f3fc0d4714648a",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "assetRoot": ".",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+    },
+    "guide.image_load2.js": {
+      "status": "supported",
+      "sourceSha256": "2ae963955a51b3872c7edc07c7e62e8ad53c124c24dc97707fbc38bcf9fb21fd",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "assetRoot": ".",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+    },
+    "guide.image_pattern.js": {
+      "status": "supported",
+      "sourceSha256": "c02c92248f11beaefcc7b4e8b049f4f06da2f43e56898f417d191647cfcf552e",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "assetRoot": ".",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+    },
+    "guide.image_pattern2.js": {
+      "status": "supported",
+      "sourceSha256": "b078ee22e0f688c50eb14b306ce1a399dc599432417f3011d23202aa0c811ffa",
+      "fixture": {
+        "size": [320, 200],
+        "frame": 3,
+        "fps": 60,
+        "pointer": [160, 100],
+        "seed": "compat"
+      },
+      "assetRoot": ".",
+      "formats": ["png", "svg"],
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+    },
+    "guide.sound_mic.js": {
+      "status": "not-applicable",
+      "sourceSha256": "74cf8d54f753c113fcd7f09ee8bb0c1ac513efc0a3dd7d4002128b18efa4bb1d",
+      "events": "events/guide.sound_mic.json",
+      "reason": "AUDIO_UNSUPPORTED",
+      "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
+    },
+    "htmlform.scope.js": {
+      "status": "not-applicable",
+      "sourceSha256": "9d0c5d55baa7e7351aa0985d9b952da08ed419c2b49f77882023b1ac97529c68",
+      "reason": "HTMLSPACE_UNSUPPORTED",
+      "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
+    },
+    "img.pixel.js": {
+      "status": "partial",
+      "sourceSha256": "2e895fa913db57e00be2d61f845a3acf6f4add847133e2859f1a4cdff70d3217",
+      "reason": "LEGACY_IMG_PIXELS_UNSUPPORTED",
+      "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
+    },
+    "sound.play.js": {
+      "status": "not-applicable",
+      "sourceSha256": "297b8528ce0669e9e6bcd4e4bffacf36ee0b4e8cf1083f2127e5a5cab7742efc",
+      "reason": "AUDIO_UNSUPPORTED",
+      "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
+    },
+    "svgform.scope.js": {
+      "status": "not-applicable",
+      "sourceSha256": "636fc1ba44a54f5146f89620710fe89df2bb50e2e5974d252164e4cb90556760",
+      "reason": "SVGSPACE_UNSUPPORTED_USE_SVG_EXPORT",
+      "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
+    }
+  }
+}

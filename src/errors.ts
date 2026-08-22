@@ -3,6 +3,8 @@ export type SkiaCanvasErrorCode =
   | "EXPORT_IN_PROGRESS"
   | "FRAME_IN_PROGRESS"
   | "INCOMPATIBLE_PTS"
+  | "MUTATION_IN_PROGRESS"
+  | "RENDERER_UNAVAILABLE"
   | "UNSUPPORTED_OPERATION";
 
 export class SkiaCanvasError extends Error {

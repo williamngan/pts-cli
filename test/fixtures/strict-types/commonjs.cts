@@ -1,4 +1,5 @@
-import adapter = require("skia-pts-canvas");
+import adapter = require("pts-cli");
+import sceneHelpers = require("pts-cli/scene");
 
 const space = new adapter.SkiaCanvasSpace(20, 10);
 const form: adapter.SkiaCanvasForm = space.getForm();
@@ -14,3 +15,6 @@ const output: Promise<string> = space.toURL("jpeg", {
 });
 void output;
 void typedSpace;
+
+const scene = sceneHelpers.defineScene({ setup() {} });
+void scene;

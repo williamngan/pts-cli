@@ -32,7 +32,7 @@ export function resetPtsStyleCache(context: object): void {
   if (typeof resetStyleCache !== "function" || typeof setStyle !== "function") {
     throw new SkiaCanvasError(
       "INCOMPATIBLE_PTS",
-      "skia-pts-canvas requires the Pts revamp CanvasForm API; the " +
+      "pts-cli requires the Pts revamp CanvasForm API; the " +
         "npm-published pts@0.12.9 implementation is not compatible.",
     );
   }
