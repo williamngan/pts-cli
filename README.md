@@ -18,13 +18,12 @@ This is an implementation-stage, private `0.1.0` package. The intended package
 name is `pts-cli`; the executable is `ptsjs`. Keeping the command slightly more
 specific avoids likely collisions around a generic `pts` executable.
 
-The authoritative Pts baseline is the local committed `revamp` snapshot
-`77420f143928d614766f13d56b2a8d7b00c44b24`, not the older npm implementation.
-That commit is not yet reachable from the public `revamp` ref, so the normal
-lockfile still resolves an earlier revamp commit. Publication remains blocked
-until the exact reviewed revision or a distinct revamp release can be installed
-reproducibly. The compatibility suite is already hash-pinned to the intended
-snapshot.
+The authoritative Pts baseline is the latest local committed `revamp` snapshot,
+currently `7031a246c6870b8175160e62baf1193967d029c9`, not the older npm
+implementation. The normal lockfile still resolves an earlier revamp commit;
+publication remains blocked until the reviewed revision or a distinct revamp
+release can be installed reproducibly. The compatibility suite is commit- and
+source-hash-pinned to the intended snapshot.
 
 ## Why skia-canvas
 
@@ -51,6 +50,15 @@ pnpm install
 pnpm build
 
 node dist/cli.mjs render examples/basic-card.mjs \
+  --json
+```
+
+With no `--out`, this creates a unique PNG such as
+`pts-output/basic-card-550e8400-e29b-41d4-a716-446655440000.png`. To choose
+names or generate multiple formats explicitly:
+
+```sh
+node dist/cli.mjs render examples/basic-card.mjs \
   --out out/basic-card.png \
   --out out/basic-card.svg \
   --json
@@ -59,12 +67,14 @@ node dist/cli.mjs render examples/basic-card.mjs \
 Once packaged, the same command is:
 
 ```sh
-ptsjs render scene.mjs --out scene.png --out scene.svg --json
+ptsjs render scene.mjs --json
 ```
 
 Output directories are created as needed. Existing files are protected unless
-`--force` is supplied. Destination directories, symlinks, other non-regular
-targets, and duplicate canonical paths are rejected before scene execution.
+`--force` is supplied. A trailing slash selects a directory and asks the CLI to
+generate the filename; a directory passed without a trailing slash is treated as
+an exact target and rejected. Symlinks, other non-regular targets, and duplicate
+canonical paths are also rejected before scene execution.
 
 ## A portable Pts scene
 
@@ -161,7 +171,7 @@ module exports and classic markers is rejected as ambiguous; choose
 `--loader scene` or `--loader pts-demo` explicitly.
 
 Classic support is manifest-based, not a blanket “all demos” claim. At Pts
-revision `77420f1…`, the checked matrix currently contains:
+revision `7031a24…`, the checked matrix currently contains:
 
 - 18 supported demos;
 - 3 supported-with-input demos;
@@ -190,39 +200,93 @@ comes from the Canvas recording, not SVGSpace.
 ## CLI
 
 ```text
-ptsjs render <source> --out <destination> [options]
+ptsjs render <source> [--out <destination>] [options]
 ```
 
 Core options:
 
-| Option                             | Purpose                                                  |
-| ---------------------------------- | -------------------------------------------------------- |
-| `-o, --out <path>`                 | Output path; repeatable; `-` writes one result to stdout |
-| `--format <name>`                  | Format for one ambiguous/stdout destination              |
-| `--loader <auto\|scene\|pts-demo>` | Source interpretation                                    |
-| `--size <width>x<height>`          | Logical size override                                    |
-| `--background <color>`             | Background override                                      |
-| `--pointer <x>,<y>`                | Initial pointer without dispatching an action            |
-| `--time <ms>`                      | One direct frame at a timestamp                          |
-| `--frame <index> --fps <rate>`     | Simulate frames 0 through the index                      |
-| `--events <file.json>`             | Deterministic action/resize timeline                     |
-| `--seed <string>`                  | Seed Pts and isolated JavaScript random streams          |
-| `--params <file.json>`             | Base parameter object                                    |
-| `--param <key=value>`              | Parameter override; repeatable                           |
-| `--density <integer>`              | Raster output scale                                      |
-| `--quality <0..1>`                 | JPEG/WebP quality                                        |
-| `--matte <color>`                  | Color beneath raster transparency                        |
-| `--text-mode <preserve\|outline>`  | SVG text policy                                          |
-| `--asset-root <path\|URL>`         | Base for scene/legacy assets                             |
-| `--allow-net`                      | Allow HTTP(S) through the asset service                  |
-| `--font <family=path>`             | Register a font; repeatable by family                    |
-| `--renderer <cpu\|auto\|gpu>`      | Native renderer policy                                   |
-| `--timeout <ms>`                   | Hard worker deadline                                     |
-| `--limit <name=value>`             | Resource-limit override; repeatable                      |
-| `--force`                          | Replace existing outputs                                 |
-| `--json`                           | Emit exactly one machine-readable result record          |
-| `--quiet`                          | Suppress human diagnostics and captured scene logs       |
-| `--debug`                          | Include stack information in JSON errors                 |
+| Option                             | Purpose                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `-o, --out <path>`                 | Exact file or trailing-`/` directory; repeatable; `-` writes to stdout |
+| `--format <name>`                  | Generated, ambiguous, or stdout format                                 |
+| `--loader <auto\|scene\|pts-demo>` | Source interpretation                                                  |
+| `--size <width>x<height>`          | Logical size override                                                  |
+| `--background <color>`             | Background override                                                    |
+| `--pointer <x>,<y>`                | Initial pointer without dispatching an action                          |
+| `--time <ms>`                      | One direct frame at a timestamp                                        |
+| `--frame <index> --fps <rate>`     | Simulate frames 0 through the index                                    |
+| `--events <file.json>`             | Replay a deterministic pointer/action/resize timeline                  |
+| `--seed <string>`                  | Seed Pts and isolated JavaScript random streams                        |
+| `--params <file.json>`             | Base parameter object                                                  |
+| `--param <key=value>`              | Parameter override; repeatable                                         |
+| `--density <integer>`              | Raster output scale                                                    |
+| `--quality <0..1>`                 | JPEG/WebP quality                                                      |
+| `--matte <color>`                  | Color beneath raster transparency                                      |
+| `--text-mode <preserve\|outline>`  | SVG text policy                                                        |
+| `--asset-root <path\|URL>`         | Base for scene/legacy assets                                           |
+| `--allow-net`                      | Allow HTTP(S) through the asset service                                |
+| `--font <family=path>`             | Register a font; repeatable by family                                  |
+| `--renderer <cpu\|auto\|gpu>`      | Native renderer policy                                                 |
+| `--timeout <ms>`                   | Hard worker deadline                                                   |
+| `--limit <name=value>`             | Resource-limit override; repeatable                                    |
+| `--force`                          | Replace existing outputs                                               |
+| `--json`                           | Emit exactly one machine-readable result record                        |
+| `--quiet`                          | Suppress human diagnostics and captured scene logs                     |
+| `--debug`                          | Include stack information in JSON errors                               |
+
+### Defaults and generated outputs
+
+Only the source is required. When `--out` is omitted, the CLI creates one PNG
+under `pts-output/` in the current working directory:
+
+```text
+pts-output/<sanitized-source-stem>-<render-id>.png
+```
+
+The render ID is a full random UUID, so simultaneous agent processes do not
+choose the same path. The absolute committed path and the same `renderId` are
+reported in `--json` output. Human-readable mode prints the path to stderr.
+`--quiet` intentionally suppresses that message, so callers using a generated
+name should use `--json` when they need to discover it programmatically.
+
+`--format` selects the generated extension:
+
+```sh
+ptsjs render scene.mjs --format svg --text-mode outline --json
+ptsjs render scene.mjs --out renders/ --format webp --json
+```
+
+The second form creates a unique file inside `renders/`. A bare `--out` remains
+an error; omit it to use `pts-output/`. Multiple outputs still require repeated
+explicit `--out` destinations.
+
+Other effective defaults are:
+
+| Setting                      | Default or fallback                                    |
+| ---------------------------- | ------------------------------------------------------ |
+| loader                       | Syntax-aware `auto` selection                          |
+| logical size                 | Scene dimensions, otherwise `800x600`                  |
+| background                   | Scene/classic-demo background, otherwise transparent   |
+| pointer                      | Canvas center                                          |
+| clock                        | One direct frame at `0ms` with a zero delta            |
+| simulated frame rate         | `60fps` when `--frame` is selected                     |
+| events                       | Empty timeline                                         |
+| random seed                  | Unset; randomness is not made deterministic implicitly |
+| parameters                   | Empty object                                           |
+| raster density               | `1`                                                    |
+| JPEG/WebP quality            | `0.92` from skia-canvas                                |
+| raster matte                 | Unset                                                  |
+| SVG text mode                | `preserve`                                             |
+| assets                       | Scene-relative, with network access disabled           |
+| additional fonts             | None                                                   |
+| renderer                     | CPU                                                    |
+| timeout                      | `30000ms`                                              |
+| overwrite                    | Disabled                                               |
+| JSON, quiet, and debug modes | Disabled                                               |
+
+`--limit` inherits the exported `DEFAULT_RENDER_RESOURCE_LIMITS` values. Flags
+such as `--background`, `--seed`, and `--font` are optional overrides rather
+than arbitrary implicit values.
 
 `--time 5000` invokes one frame with `(time, delta) = (5000, 0)`. It does not
 invent intermediate frames. Stateful sketches should use, for example,
@@ -247,7 +311,18 @@ An event file is versioned and strictly validated:
 ```
 
 Events are stably ordered by `at` and source order. `--pointer` changes initial
-state only; it does not synthesize a move callback.
+state only; it does not synthesize a move callback. Each `at` is a millisecond
+timestamp on the selected render clock. Before a frame, the runner dispatches
+all events whose timestamp is at or before that frame and then calls the normal
+Pts `action(type, x, y, event)` handlers. Pointer actions update the synthetic
+pointer state; resize events update the canvas and invoke its resize lifecycle.
+
+With `--time 1000`, applicable events are replayed through `1000ms` and then one
+frame is rendered. With `--frame 60 --fps 60`, intermediate frames are rendered
+and each event is applied before the first frame boundary that reaches it.
+Events after the final render time are not dispatched. The timeline supports Pts
+pointer/action types and resize, not keyboard input or an emulated browser event
+loop.
 
 ### Agent-facing JSON
 
@@ -257,6 +332,7 @@ Success writes one JSON object to stdout:
 {
   "ok": true,
   "schemaVersion": 1,
+  "renderId": "550e8400-e29b-41d4-a716-446655440000",
   "loader": "scene",
   "width": 640,
   "height": 360,
@@ -265,7 +341,7 @@ Success writes one JSON object to stdout:
       "format": "png",
       "bytes": 12345,
       "sha256": "...",
-      "path": "/absolute/path/circles.png"
+      "path": "/absolute/path/pts-output/circles-550e8400-e29b-41d4-a716-446655440000.png"
     }
   ]
 }
@@ -437,7 +513,7 @@ The exact local Pts snapshot can be checked without modifying it:
 ```sh
 # node_modules/pts must temporarily resolve to this detached/read-only checkout
 pnpm build
-pnpm test:compatibility /path/to/pts-at-77420f1
+pnpm test:compatibility /path/to/pts-at-7031a24
 ```
 
 The compatibility verifier checks the commit when Git metadata is present,

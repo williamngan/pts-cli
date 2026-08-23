@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
-import { extname, resolve } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 
 import { PtsRenderError } from "./PtsRenderError.js";
 import {
@@ -14,6 +15,7 @@ export type ParsedCLI =
   | { readonly command: "help" | "version" }
   | {
       readonly command: "render";
+      readonly renderId: string;
       readonly source: string;
       readonly options: RenderSceneOptions;
       readonly json: boolean;
@@ -107,6 +109,15 @@ function tokenize(argv: readonly string[]): RawArguments {
     }
     if (!valueOptions.has(option.name)) {
       usage("Unknown option: --" + option.name);
+    }
+    const following = argv[index + 1];
+    if (
+      option.inline === undefined &&
+      (following === undefined ||
+        following.startsWith("--") ||
+        following === "-o")
+    ) {
+      usage("--" + option.name + " requires a value");
     }
     const value = option.inline ?? argv[++index];
     if (value === undefined) usage("--" + option.name + " requires a value");
@@ -275,7 +286,12 @@ async function parseEvents(
   return root.events as PtsSceneEvent[];
 }
 
-function outputFormat(path: string, explicit: string | undefined): string {
+type CanonicalOutputFormat = "png" | "jpeg" | "webp" | "raw" | "svg";
+
+function outputFormat(
+  path: string,
+  explicit: string | undefined,
+): CanonicalOutputFormat {
   const inferred =
     path === "-"
       ? ""
@@ -299,22 +315,85 @@ function outputFormat(path: string, explicit: string | undefined): string {
   if (!["png", "jpeg", "webp", "raw", "svg"].includes(format)) {
     usage("Cannot infer output format from " + path + "; pass --format");
   }
-  return format;
+  return format as CanonicalOutputFormat;
 }
 
-function parseOutputs(raw: RawArguments): {
+function generatedOutputFilename(
+  source: string,
+  renderId: string,
+  format: CanonicalOutputFormat,
+): string {
+  const sourceName = basename(source);
+  const sourceExtension = extname(sourceName);
+  const rawStem = sourceName.slice(
+    0,
+    sourceName.length - sourceExtension.length,
+  );
+  const stem =
+    rawStem
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^[._-]+|[._-]+$/g, "")
+      .slice(0, 48)
+      .replace(/[._-]+$/g, "") || "scene";
+  return stem + "-" + renderId + "." + format;
+}
+
+function isDirectoryDestination(path: string): boolean {
+  return (
+    path.endsWith("/") || (process.platform === "win32" && path.endsWith("\\"))
+  );
+}
+
+function parseOutputs(
+  raw: RawArguments,
+  source: string,
+  renderId: string,
+): {
   readonly outputs: readonly RenderOutputRequest[];
   readonly stdoutOutput: boolean;
 } {
-  const paths = raw.values.get("out") ?? [];
-  if (paths.length === 0) usage("At least one --out destination is required");
+  const requestedPaths = raw.values.get("out") ?? [];
+  if (requestedPaths.some((path) => path.length === 0)) {
+    usage("--out requires a non-empty destination");
+  }
   const explicit = one(raw, "format");
-  if (explicit !== undefined && paths.length !== 1) {
+  if (explicit !== undefined && requestedPaths.length > 1) {
     usage("--format is valid only with exactly one --out destination");
   }
-  if (paths.filter((path) => path === "-").length > 1) {
+  if (requestedPaths.filter((path) => path === "-").length > 1) {
     usage("Standard output may be selected only once");
   }
+
+  const resolved =
+    requestedPaths.length === 0
+      ? (() => {
+          const format = outputFormat("-", explicit ?? "png");
+          return [
+            {
+              path: join(
+                "pts-output",
+                generatedOutputFilename(source, renderId, format),
+              ),
+              format,
+            },
+          ];
+        })()
+      : requestedPaths.map((path) => {
+          if (isDirectoryDestination(path)) {
+            const format = outputFormat("-", explicit ?? "png");
+            return {
+              path: join(
+                path,
+                generatedOutputFilename(source, renderId, format),
+              ),
+              format,
+            };
+          }
+          return { path, format: outputFormat(path, explicit) };
+        });
+  const paths = resolved.map(({ path }) => path);
 
   const density = one(raw, "density");
   const quality = one(raw, "quality");
@@ -327,7 +406,7 @@ function parseOutputs(raw: RawArguments): {
   ) {
     usage('--text-mode must be "preserve" or "outline"');
   }
-  const formats = paths.map((path) => outputFormat(path, explicit));
+  const formats = resolved.map(({ format }) => format);
   if (
     quality !== undefined &&
     !formats.some((format) => ["jpeg", "webp"].includes(format))
@@ -352,8 +431,7 @@ function parseOutputs(raw: RawArguments): {
     usage("--quality must be between 0 and 1");
   }
 
-  const outputs = paths.map((path, index): RenderOutputRequest => {
-    const format = formats[index];
+  const outputs = resolved.map(({ path, format }): RenderOutputRequest => {
     const target = path === "-" ? {} : { path };
     if (format === "svg") {
       return {
@@ -417,12 +495,14 @@ export async function parseCLIArguments(
     usage('Expected the "render" subcommand');
   }
   if (raw.positionals.length !== 2 || !raw.positionals[1]) {
-    usage("Usage: ptsjs render <source> --out <destination>");
+    usage("Usage: ptsjs render <source> [--out <destination>]");
   }
 
+  const source = raw.positionals[1];
+  const renderId = randomUUID();
   const limits = parseLimits(raw);
   const effectiveLimits = { ...DEFAULT_RENDER_RESOURCE_LIMITS, ...limits };
-  const { outputs, stdoutOutput } = parseOutputs(raw);
+  const { outputs, stdoutOutput } = parseOutputs(raw, source, renderId);
   const json = raw.booleans.has("json");
   if (json && stdoutOutput) {
     usage("--json cannot be combined with --out -");
@@ -485,7 +565,8 @@ export async function parseCLIArguments(
 
   return {
     command: "render",
-    source: raw.positionals[1],
+    renderId,
+    source,
     options: {
       loader,
       ...(size === undefined ? {} : { size }),

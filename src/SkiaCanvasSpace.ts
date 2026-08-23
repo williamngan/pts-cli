@@ -65,6 +65,8 @@ interface PlayerRegistration {
   readonly serial: number;
 }
 
+type PtsActionEvent = Parameters<NonNullable<IPlayer["action"]>>[3];
+
 interface RunnerLifecycleController {
   begin(): void;
   bound(): Bound;
@@ -620,7 +622,7 @@ export class SkiaCanvasSpace extends Space {
           type,
           nextPointer.x,
           nextPointer.y,
-          event as unknown as Event,
+          event as unknown as PtsActionEvent,
         );
       }
 

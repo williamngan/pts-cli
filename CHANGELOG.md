@@ -7,6 +7,9 @@
 - `ptsjs render` CLI with stable JSON records, exit codes, stdout output,
   multiple formats, no-clobber commits, hard timeouts, signals, and resource
   limits.
+- Collision-safe default PNG destinations with source-derived names, UUID render
+  IDs, explicit trailing-slash directory targets, and format-selectable
+  generated outputs.
 - Canonical output-path collision checks and explicit rejection of destination
   directories, symlinks, and other non-regular files, including with `--force`.
 - Worker-isolated `renderScene()` API with path and Buffer outputs.
@@ -49,11 +52,14 @@
   scene execution.
 - Hostile or uninspectable option proxies are normalized into stable usage
   errors instead of escaping the public error contract.
+- Synthetic Pts action dispatch derives its event parameter from the installed
+  revamp `IPlayer` contract, supporting both the earlier `Event` signature and
+  the latest `UIActionEvent` signature without patching Pts.
 
 ### Release gates
 
 - The reviewed local Pts `revamp` baseline
-  `77420f143928d614766f13d56b2a8d7b00c44b24` is not yet available from the
+  `7031a246c6870b8175160e62baf1193967d029c9` is not yet available from the
   configured public Git ref, so the package remains private.
 - Editable/pixel legacy Img, Sound, HTMLSpace, SVGSpace, and offscreen browser
   helpers remain outside the supported Node contract.

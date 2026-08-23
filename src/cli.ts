@@ -11,13 +11,16 @@ const HELP = `Pts CLI ${VERSION}
 Render portable scenes and compatible classic Pts demos to images and SVG.
 
 Usage:
-  ptsjs render <source> --out <destination> [options]
+  ptsjs render <source> [--out <destination>] [options]
   ptsjs --help
   ptsjs --version
 
 Output:
-  -o, --out <path>                 Output path; repeatable; use - for stdout
-  --format <png|jpeg|webp|raw|svg> Required for stdout or unknown extensions
+  -o, --out <path>                 File or trailing-slash directory; repeatable
+                                      (- writes stdout; omit for generated PNG)
+                                      (default: pts-output/<source>-<uuid>.png)
+  --format <png|jpeg|webp|raw|svg> Generated/stdout/extensionless format
+                                      (default for generated output: png)
   --density <integer>              Raster pixels per logical unit
   --quality <0..1>                 JPEG or WebP quality
   --matte <color>                  Raster background beneath transparency
@@ -32,7 +35,7 @@ Scene and rendering:
   --time <ms>                      Render one direct frame (default: 0)
   --frame <index>                  Simulate frames 0 through index
   --fps <number>                   Simulation rate (default: 60)
-  --events <file.json>             Versioned action/resize timeline
+  --events <file.json>             Replay pointer/action/resize events
   --seed <string>                  Seed Pts and worker Math.random
   --params <file.json>             Base scene parameters
   --param <key=value>              Override a parameter; repeatable
@@ -119,6 +122,7 @@ async function main(): Promise<void> {
     (argument) => argument === "--json" || argument.startsWith("--json="),
   );
   const wantsDebug = argv.includes("--debug");
+  let renderId: string | undefined;
 
   try {
     const parsed = await parseCLIArguments(argv);
@@ -126,6 +130,7 @@ async function main(): Promise<void> {
       await writeStdout(parsed.command === "help" ? HELP : VERSION + "\n");
       return;
     }
+    renderId = parsed.renderId;
 
     const controller = new AbortController();
     const interrupt = (): void => controller.abort();
@@ -141,7 +146,10 @@ async function main(): Promise<void> {
     }
 
     if (parsed.json) {
-      await writeStdout(JSON.stringify({ ok: true, ...result }) + "\n");
+      await writeStdout(
+        JSON.stringify({ ok: true, renderId: parsed.renderId, ...result }) +
+          "\n",
+      );
       return;
     }
 
@@ -178,6 +186,7 @@ async function main(): Promise<void> {
         JSON.stringify({
           schemaVersion: 1,
           ok: false,
+          ...(renderId === undefined ? {} : { renderId }),
           error: serializePtsRenderError(error, wantsDebug),
         }) + "\n",
       );

@@ -11,7 +11,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 
 import { renderScene } from "../dist/index.mjs";
 
@@ -38,9 +38,10 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function run(args) {
+function run(args, cwd) {
   return new Promise((resolveRun, reject) => {
     const child = spawn(process.execPath, [cli, ...args], {
+      ...(cwd === undefined ? {} : { cwd }),
       stdio: ["ignore", "pipe", "pipe"],
     });
     const stdout = [];
@@ -65,6 +66,60 @@ try {
   const help = await run(["--help"]);
   assert(help.code === 0, "--help failed");
   assert(help.stdout.toString().includes("ptsjs render"), "help is incomplete");
+  assert(
+    help.stdout.toString().includes("pts-output/<source>-<uuid>.png"),
+    "help omits generated output behavior",
+  );
+
+  const generated = await run(["render", scene, "--json"], temporary);
+  assert(generated.code === 0, generated.stderr.toString());
+  const generatedRecord = JSON.parse(generated.stdout.toString());
+  assert(
+    /^[0-9a-f-]{36}$/.test(generatedRecord.renderId),
+    "generated render ID is missing",
+  );
+  assert(
+    generatedRecord.outputs[0].format === "png" &&
+      dirname(generatedRecord.outputs[0].path) ===
+        join(temporary, "pts-output") &&
+      basename(generatedRecord.outputs[0].path) ===
+        "portable-card-" + generatedRecord.renderId + ".png",
+    "default output path is unstable",
+  );
+  assert(
+    (await readFile(generatedRecord.outputs[0].path)).readUInt32BE(0) ===
+      0x89504e47,
+    "generated PNG is invalid",
+  );
+
+  const generatedSvgDirectory = join(temporary, "generated-svg") + sep;
+  const generatedSvg = await run(
+    [
+      "render",
+      scene,
+      "--out",
+      generatedSvgDirectory,
+      "--format",
+      "svg",
+      "--json",
+    ],
+    temporary,
+  );
+  assert(generatedSvg.code === 0, generatedSvg.stderr.toString());
+  const generatedSvgRecord = JSON.parse(generatedSvg.stdout.toString());
+  assert(
+    dirname(generatedSvgRecord.outputs[0].path) ===
+      generatedSvgDirectory.slice(0, -1) &&
+      basename(generatedSvgRecord.outputs[0].path) ===
+        "portable-card-" + generatedSvgRecord.renderId + ".svg",
+    "directory output path is unstable",
+  );
+  assert(
+    (await readFile(generatedSvgRecord.outputs[0].path, "utf8")).includes(
+      "<svg",
+    ),
+    "generated directory SVG is invalid",
+  );
 
   const pngPath = join(temporary, "created", "card.png");
   const svgPath = join(temporary, "created", "card.svg");
@@ -89,6 +144,7 @@ try {
     record.ok === true && record.schemaVersion === 1,
     "invalid success JSON",
   );
+  assert(/^[0-9a-f-]{36}$/.test(record.renderId), "render ID is missing");
   assert(record.outputs.length === 2, "missing CLI outputs");
   assert(
     (await stat(pngPath)).size === record.outputs[0].bytes,

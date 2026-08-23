@@ -138,6 +138,21 @@ try {
   if (!help.stdout.includes("ptsjs render")) {
     throw new Error("packed ptsjs help mismatch");
   }
+  const generated = await execute(
+    process.execPath,
+    [bin, "render", scenePath, "--json"],
+    { cwd: temporary },
+  );
+  const generatedRecord = JSON.parse(generated.stdout);
+  const generatedPath = generatedRecord.outputs?.[0]?.path;
+  if (
+    generatedRecord.renderId === undefined ||
+    typeof generatedPath !== "string" ||
+    !generatedPath.includes(generatedRecord.renderId) ||
+    (await readFile(generatedPath)).readUInt32BE(0) !== 0x89504e47
+  ) {
+    throw new Error("packed ptsjs generated PNG mismatch");
+  }
   const outputPath = join(temporary, "packed-output.png");
   await execute(
     process.execPath,

@@ -1,6 +1,6 @@
 # Compatibility notes
 
-- Date: 2026-08-21
+- Date: 2026-08-22
 - Status: implementation baseline
 - Runtime: Node 24.19.0, skia-canvas 3.0.8, Pts `revamp`
 
@@ -9,14 +9,14 @@
 The requested authority is the latest committed local `revamp` snapshot:
 
 ```text
-commit: 77420f143928d614766f13d56b2a8d7b00c44b24
+commit: 7031a246c6870b8175160e62baf1193967d029c9
 package version: 0.12.9
 ```
 
-The npm-published implementation is not the baseline. At this review, the public
-`refs/heads/revamp` still points to `1c0256b26191ba54a8e8ecce4bc4dc9151676f4a`,
-so `77420f1…` cannot yet be recorded as a reproducible Git dependency. This
-repository's lockfile therefore still resolves the earlier revamp snapshot
+The npm-published implementation is not the baseline. At this review,
+`origin/revamp` points to `39f7c56f65f192580bc632ff0546ef6856141544`, while the
+local head adds the committed repository `SKILL.md`. This repository's lockfile
+still resolves the earlier revamp snapshot
 `89205a1d8e736aee340a021f4b201034dde8e0fa`. The package remains private and
 release-blocked rather than pretending that older resolution is the requested
 baseline.
@@ -26,13 +26,12 @@ repositories and a temporary `node_modules/pts` symlink that was restored after
 each run. No install, build, formatter, generator, or write command ran inside
 `/app/pts`.
 
-The neighboring checkout stayed at `77420f1…`. Its externally owned dirty state
-was unchanged across the compatibility work; the recorded read-only fingerprints
-were:
+The neighboring checkout stayed at `7031a24…` throughout the final compatibility
+pass and was clean before and after it:
 
 ```text
-git status --short: aa1b0979614e8e1f3dc61bd2fae0e892e1d4589b
-git diff:         7b2385e136843f48b1db43352a1222f97635321d
+git status --short: empty
+git diff:         empty
 ```
 
 These hashes describe preservation evidence, not input to the build. Only the
@@ -54,9 +53,10 @@ committed archive is a baseline.
   classic loader reproduces this detail because `ui.track.js` depends on it.
 - Canvas resize resets native context state and Pts style caches. Retained Skia
   forms are reset after resize.
-- The final local Pts commits change Group/Bound behavior and seeded RNG
-  behavior. Compatibility output and random goldens were regenerated only
-  against `77420f1…`.
+- The local Pts history changes Group/Bound behavior, seeded RNG behavior, and
+  the action event type. Compatibility output and type checks were rerun against
+  `7031a24…`; all 26 selected demo sources remain byte-identical to the earlier
+  manifest inputs.
 - Named text-width estimator modes (`"sample"` and `"char"`) are retained when
   the Skia form changes fonts.
 
@@ -89,9 +89,10 @@ committed archive is a baseline.
   contract specifies.
 - Asset diagnostics omit data payloads and redact URL credentials and query
   strings. Browser failures name loading/CORS policy without exposing them.
-- Output parents are canonicalized before rendering. Aliased duplicates,
-  destination directories, symlinks, and other non-regular targets are rejected
-  even when overwrite is requested.
+- Output parents are canonicalized before rendering. A trailing separator asks
+  the CLI to generate a unique filename inside that directory; directories used
+  as exact targets, aliased duplicates, symlinks, and other non-regular targets
+  are rejected even when overwrite is requested.
 - Worker error causes cross IPC as a bounded chain; arbitrary details are
   cycle/accessor safe and stacks appear only in debug JSON.
 
@@ -163,10 +164,16 @@ built-in, skia-canvas, or an unexpected bare import.
 - Pts declarations require DOM library names even for Node-compatible geometry,
   so package declaration entry points carry a DOM reference.
 - NodeNext and Node16 strict fixtures use `skipLibCheck: false`.
+- The package source build uses `skipLibCheck: true` because current Pts revamp
+  declarations make `Bound.x/y/z` explicitly `number | undefined` while
+  `Bound implements IPt` and `IPt` declares exact optional numeric properties.
+  This contains an upstream declaration self-check failure without weakening
+  this package's source checks; the separate consumer fixtures remain strict
+  with library checking enabled.
 
 ## Remaining release gates
 
-1. Make `77420f1…` or a reviewed successor available through an immutable
+1. Make `7031a24…` or a reviewed successor available through an immutable
    dependency source and update only this repository's lockfile.
 2. Rerun every normal, packed, browser, native, and compatibility check at that
    exact lock.

@@ -348,7 +348,7 @@ describe("SkiaCanvasSpace lifecycle", () => {
 
     space.add({
       action(type, x, y, event) {
-        const synthetic = event as Event & {
+        const synthetic = event as unknown as Event & {
           defaultPrevented: boolean;
           propagationStopped: boolean;
           pointerType: string;

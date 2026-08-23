@@ -16,7 +16,7 @@ describe("classic compatibility manifest", () => {
     expect(manifest.pts).toEqual(
       expect.objectContaining({
         branch: "revamp",
-        commit: "77420f143928d614766f13d56b2a8d7b00c44b24",
+        commit: "7031a246c6870b8175160e62baf1193967d029c9",
       }),
     );
     expect(Object.keys(manifest.demos).length).toBeGreaterThanOrEqual(20);

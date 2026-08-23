@@ -4,13 +4,14 @@
 > exact-source compatibility runtime and representative manifest; Phase 5
 > supports portable assets plus the non-editable legacy image subset. Browser,
 > packed-package, CLI, SVG, and exact local-revamp checks pass. Phase 0's
-> release lock remains blocked because the reviewed local Pts commit `77420f1…`
+> release lock remains blocked because the reviewed local Pts commit `7031a24…`
 > is not reachable from the configured public Git ref. Phase 6 publication and
 > hosted platform gates remain open. No implementation command writes to the Pts
 > repo.
 
 Status: Core implementation complete; release-only gates remain  
-Date: 2026-08-21  
+Date: 2026-08-22
+
 Product name: Pts CLI  
 Working npm package name: `pts-cli`  
 Executable name: `ptsjs`  
@@ -95,16 +96,15 @@ The neighboring Pts checkout was reviewed read-only at:
 
 ```text
 branch: revamp
-commit: 77420f143928d614766f13d56b2a8d7b00c44b24
+commit: 7031a246c6870b8175160e62baf1193967d029c9
 ```
 
-That commit was the current committed local `revamp` head at the end of the
-planning review. It was two commits ahead of `origin/revamp`, which still
-pointed to `1c0256b26191ba54a8e8ecce4bc4dc9151676f4a`; the local revamp
-checkout, not the published package or stale remote ref, is the user-requested
-authority. A branch name alone is not reproducible, so implementation must
-record the exact commit reviewed in this repository's lockfile and compatibility
-notes.
+That commit is the current committed local `revamp` head. Its runtime and demo
+code includes the current `origin/revamp` head `39f7c56…`; the final local
+commit adds repository guidance. The local revamp checkout, not the published
+package, is the user-requested authority. A branch name alone is not
+reproducible, so the compatibility manifest and notes record the exact reviewed
+commit.
 
 The two final baseline advances were reviewed read-only:
 
@@ -127,7 +127,7 @@ CanvasForm, typography, UI, physics, geometry, and demo changes. Updating that
 lock is the first implementation gate; no CLI compatibility claim may be made
 against the older installed baseline.
 
-Because `77420f1…` was not yet reachable from the configured remote at final
+Because `7031a24…` is not yet reachable from the configured remote at final
 review, Phase 0 must not silently lock the older remote head. Wait until the
 exact commit is fetchable from an immutable dependency source (or an explicit
 revamp prerelease exists), then lock it here. A local-path dependency may be
@@ -189,11 +189,11 @@ gate.
 
 No spike files or outputs were written to either repository.
 
-The spike preceded the final `bbdb982e…` and `77420f1…` baseline commits. Its
-loader feasibility result remains useful because those commits did not change
-loader/lifecycle APIs, but its rendered images are not acceptance evidence for
-the new geometry/random baseline. Phase 0 reruns every selected demo after the
-exact commit is locked.
+The spike preceded the then-final `bbdb982e…` and `77420f1…` baseline commits.
+Its loader feasibility result remains useful because those commits did not
+change loader/lifecycle APIs, but its rendered images are not acceptance
+evidence for the new geometry/random baseline. Phase 0 reruns every selected
+demo after the exact commit is locked.
 
 ### 3.4 Existing adapter strengths
 
@@ -913,7 +913,7 @@ capability sandbox. Scene modules can still import Node filesystem/network APIs.
 ### 11.1 Primary command
 
 ```text
-ptsjs render <source> --out <destination> [options]
+ptsjs render <source> [--out <destination>] [options]
 ```
 
 Examples:
@@ -935,8 +935,8 @@ without changing `render`.
 
 | Option                             | Meaning                                                                        |
 | ---------------------------------- | ------------------------------------------------------------------------------ |
-| `-o, --out <path>`                 | Output path; repeatable; `-` means binary/text stdout                          |
-| `--format <name>`                  | Explicit format for exactly one destination; must agree with a known extension |
+| `-o, --out <path>`                 | Exact file or trailing-`/` directory; repeatable; `-` means binary/text stdout |
+| `--format <name>`                  | Format for one explicit or generated destination                               |
 | `--loader <auto\|scene\|pts-demo>` | Source interpretation; deterministic override for auto-detection               |
 | `--size <width>x<height>`          | Override logical scene dimensions                                              |
 | `--background <color>`             | Override scene or quickStart background                                        |
@@ -1048,16 +1048,21 @@ messages.
 
 ### 11.5 Output path policy
 
-1. `--out` is required for the first release; there is no surprising default
-   filename.
-2. Parent directories are created automatically.
-3. Existing destinations require `--force`.
-4. A destination directory, broken format extension, or extension/format
+1. With no `--out`, generate one PNG at
+   `pts-output/<sanitized-source-stem>-<render-id>.png`. `--format` changes its
+   format and extension. The render ID is a full random UUID, is independent of
+   the scene seed, and is returned in CLI JSON.
+2. A trailing-`/` output is a directory request and receives the same generated
+   filename. A bare `--out` is invalid. Existing directories without a trailing
+   separator remain invalid exact targets.
+3. Parent directories are created automatically.
+4. Existing destinations require `--force`.
+5. A destination directory, broken format extension, or extension/format
    conflict fails before scene execution.
-5. Temporary files are created beside their destinations with unique names so
+6. Temporary files are created beside their destinations with unique names so
    rename stays on one filesystem.
-6. SIGINT, timeout, or failure removes only temporary files created by the run.
-7. Symlinks and non-regular existing targets are rejected unless a later,
+7. SIGINT, timeout, or failure removes only temporary files created by the run.
+8. Symlinks and non-regular existing targets are rejected unless a later,
    explicitly documented policy supports them.
 
 Existence checks are not overwrite protection: another process can create a
@@ -1105,7 +1110,7 @@ Version the record independently of the scene schema:
   "runtime": {
     "node": "24.19.0",
     "ptsVersion": "0.12.9",
-    "ptsRevision": "77420f143928d614766f13d56b2a8d7b00c44b24",
+    "ptsRevision": "7031a246c6870b8175160e62baf1193967d029c9",
     "skiaCanvas": "3.0.8",
     "requestedRenderer": "cpu",
     "renderer": "cpu"
@@ -2171,7 +2176,7 @@ Proposed record shape:
   "schemaVersion": 1,
   "pts": {
     "branch": "revamp",
-    "commit": "77420f143928d614766f13d56b2a8d7b00c44b24"
+    "commit": "7031a246c6870b8175160e62baf1193967d029c9"
   },
   "demos": {
     "circle.intersectCircle2D.js": {
@@ -2405,7 +2410,8 @@ The first CLI milestone is complete only when:
 1. this repository targets the latest explicitly reviewed Pts revamp commit;
 2. the Pts repository has no task-introduced delta from its recorded initial
    HEAD/status/diff fingerprint;
-3. `ptsjs render scene.mjs --out art.png` works from a packed install;
+3. Both `ptsjs render scene.mjs` and `ptsjs render scene.mjs --out art.png` work
+   from a packed install;
 4. the same portable scene is mounted by `pts-cli/browser` without source
    changes or a Skia dependency in its browser bundle;
 5. PNG and SVG export through the public adapter and CLI;
@@ -2473,7 +2479,7 @@ wording:
 12. added source hashes plus browser lifecycle/reference-render tests;
 13. replaced the unsafe assumption that the neighboring Pts checkout must be
     clean with a no-task-introduced-delta fingerprint rule; and
-14. re-reviewed the moving local revamp head through `77420f1…`, incorporated
+14. re-reviewed the moving local revamp head through `7031a24…`, incorporated
     its Group/Bound and seeded-RNG implications, and made remote reachability a
     Phase 0 gate instead of falling back to stale code.
 
