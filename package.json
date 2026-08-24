@@ -6,12 +6,12 @@
   "author": "William Ngan",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/williamngan/skia-pts-canvas.git"
+    "url": "git+https://github.com/williamngan/pts-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/williamngan/skia-pts-canvas/issues"
+    "url": "https://github.com/williamngan/pts-cli/issues"
   },
-  "homepage": "https://github.com/williamngan/skia-pts-canvas#readme",
+  "homepage": "https://github.com/williamngan/pts-cli#readme",
   "type": "module",
   "sideEffects": false,
   "private": true,

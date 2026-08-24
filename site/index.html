@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Pts CLI renders Pts.js scenes to raster images and SVG in Node.js."
+      content="Render Pts.js scenes from the command line."
     />
     <meta name="theme-color" content="#10283a" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Pts CLI" />
     <meta
       property="og:description"
-      content="Render portable and compatible classic Pts.js scenes in Node.js."
+      content="Render Pts.js scenes from the command line."
     />
     <title>Pts CLI</title>
     <link rel="icon" href="data:," />
@@ -36,7 +36,7 @@
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu,
           "Helvetica Neue", Arial, sans-serif;
         --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        --content: 1120px;
+        --content: 1080px;
       }
 
       *,
@@ -47,7 +47,7 @@
 
       html {
         scroll-behavior: smooth;
-        scroll-padding-top: 82px;
+        scroll-padding-top: 80px;
       }
 
       body {
@@ -58,11 +58,6 @@
         font-size: 16px;
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
-      }
-
-      button,
-      a {
-        -webkit-tap-highlight-color: transparent;
       }
 
       button {
@@ -79,9 +74,7 @@
         font-family: var(--mono);
       }
 
-      img,
-      svg,
-      canvas {
+      svg {
         display: block;
         max-width: 100%;
       }
@@ -119,9 +112,9 @@
 
       .site-header {
         position: sticky;
-        z-index: 50;
+        z-index: 20;
         top: 0;
-        height: 68px;
+        height: 66px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.13);
         background: var(--navy);
         color: var(--paper);
@@ -131,7 +124,7 @@
         display: flex;
         height: 100%;
         align-items: center;
-        gap: 36px;
+        gap: 28px;
       }
 
       .brand {
@@ -159,12 +152,6 @@
         text-transform: uppercase;
       }
 
-      .nav-links {
-        display: flex;
-        align-items: center;
-        gap: 26px;
-      }
-
       .nav a:not(.brand) {
         color: rgba(255, 255, 255, 0.72);
         font-size: 13px;
@@ -181,297 +168,79 @@
         color: var(--paper);
       }
 
-      .hero-layout {
-        display: grid;
-        min-height: 690px;
-        align-items: center;
-        gap: 78px;
-        grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
-        padding-top: 74px;
-        padding-bottom: 88px;
+      .hero-inner {
+        padding-top: 78px;
+        padding-bottom: 92px;
+      }
+
+      .hero-copy {
+        max-width: 780px;
       }
 
       .hero h1 {
-        max-width: 650px;
         margin: 0;
-        font-size: clamp(54px, 6vw, 82px);
+        font-size: clamp(54px, 6.4vw, 84px);
         font-weight: 360;
         letter-spacing: -0.065em;
         line-height: 1;
       }
 
-      .hero-copy > p {
-        max-width: 620px;
-        margin: 28px 0 0;
+      .hero-copy p {
+        max-width: 630px;
+        margin: 25px 0 0;
         color: rgba(255, 255, 255, 0.72);
         font-size: 19px;
-        line-height: 1.65;
       }
 
-      .hero-command {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        max-width: 590px;
-        margin-top: 35px;
-        padding: 15px 16px 15px 19px;
-        border: 1px solid rgba(255, 255, 255, 0.22);
+      .start-grid {
+        display: grid;
+        align-items: stretch;
+        gap: 22px;
+        grid-template-columns: minmax(0, 1.16fr) minmax(360px, 0.84fr);
+        margin-top: 52px;
+      }
+
+      .start-grid > * {
+        min-width: 0;
+      }
+
+      .terminal,
+      .output-preview,
+      .code-panel {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         background: var(--navy-dark);
       }
 
-      .hero-command code {
-        color: var(--code-text);
-        font-size: 12px;
-        overflow-wrap: anywhere;
+      .panel-head {
+        display: flex;
+        min-height: 49px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 0 13px 0 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+        color: rgba(255, 255, 255, 0.56);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
       }
 
       .copy-button {
-        flex: 0 0 auto;
-        min-height: 31px;
+        min-height: 30px;
         padding: 0 10px;
-        border: 1px solid var(--line);
+        border: 1px solid rgba(255, 255, 255, 0.24);
         border-radius: 4px;
-        background: var(--paper);
-        color: var(--muted);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
         cursor: pointer;
         font-size: 11px;
         font-weight: 700;
       }
 
       .copy-button:hover {
-        border-color: var(--violet);
-        color: var(--violet);
-      }
-
-      .hero .copy-button,
-      .quickstart .copy-button,
-      .code-panel-dark .copy-button {
-        border-color: rgba(255, 255, 255, 0.23);
-        background: transparent;
-        color: rgba(255, 255, 255, 0.74);
-      }
-
-      .hero .copy-button:hover,
-      .quickstart .copy-button:hover,
-      .code-panel-dark .copy-button:hover {
         border-color: var(--paper);
         color: var(--paper);
-      }
-
-      .hero-meta {
-        margin-top: 18px;
-        color: rgba(255, 255, 255, 0.5);
-        font-family: var(--mono);
-        font-size: 10px;
-        letter-spacing: 0.03em;
-      }
-
-      .hero-formats {
-        margin-top: 11px;
-        color: rgba(255, 255, 255, 0.68);
-        font-size: 12px;
-      }
-
-      .render-figure {
-        margin: 0;
-      }
-
-      .render-frame {
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        background: var(--navy-dark);
-      }
-
-      .render-frame-head {
-        padding: 12px 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.13);
-        color: rgba(255, 255, 255, 0.55);
-        font-family: var(--mono);
-        font-size: 10px;
-      }
-
-      .render-canvas-wrap {
-        height: 390px;
-      }
-
-      #heroCanvas {
-        width: 100%;
-        height: 100%;
-      }
-
-      .render-figure figcaption {
-        margin-top: 10px;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-      }
-
-      .section {
-        padding: 104px 0;
-      }
-
-      .section-soft {
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        background: var(--soft);
-      }
-
-      .section-heading {
-        max-width: 760px;
-        margin-bottom: 52px;
-      }
-
-      .section-heading h2 {
-        margin: 0;
-        color: var(--navy);
-        font-size: clamp(38px, 4.4vw, 58px);
-        font-weight: 390;
-        letter-spacing: -0.055em;
-        line-height: 1.05;
-      }
-
-      .section-heading p {
-        margin: 20px 0 0;
-        color: var(--muted);
-        font-size: 17px;
-      }
-
-      .overview-grid {
-        display: grid;
-        align-items: start;
-        gap: 64px;
-        grid-template-columns: minmax(0, 1fr) minmax(380px, 0.86fr);
-      }
-
-      .fact-list {
-        margin: 0;
-        border-top: 1px solid var(--line);
-      }
-
-      .fact-row {
-        display: grid;
-        gap: 24px;
-        grid-template-columns: 118px 1fr;
-        padding: 20px 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .fact-row dt {
-        color: var(--navy);
-        font-weight: 700;
-      }
-
-      .fact-row dd {
-        margin: 0;
-        color: var(--muted);
-      }
-
-      .flow {
-        margin: 0;
-        padding: 28px;
-        border: 1px solid var(--line);
-        background: var(--paper);
-      }
-
-      .flow-diagram {
-        display: grid;
-        align-items: center;
-        gap: 12px;
-        grid-template-columns: 1fr auto 1fr auto 1fr;
-      }
-
-      .flow-node {
-        min-height: 112px;
-        padding: 17px;
-        border: 1px solid var(--line);
-        background: var(--soft);
-      }
-
-      .flow-node strong {
-        display: block;
-        color: var(--navy);
-        font-family: var(--mono);
-        font-size: 11px;
-      }
-
-      .flow-node span {
-        display: block;
-        margin-top: 8px;
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .flow-arrow {
-        color: var(--violet);
-        font-family: var(--mono);
-        font-size: 19px;
-      }
-
-      .flow figcaption {
-        margin-top: 19px;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .usage-grid {
-        display: grid;
-        align-items: stretch;
-        gap: 20px;
-        grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
-      }
-
-      .usage-grid > *,
-      .usage-side > *,
-      .determinism-grid > *,
-      .reference-grid > *,
-      .quickstart-grid > * {
-        min-width: 0;
-      }
-
-      .usage-side {
-        display: grid;
-        gap: 20px;
-        grid-template-rows: 1fr 1fr;
-      }
-
-      .code-panel {
-        overflow: hidden;
-        border: 1px solid var(--line);
-        background: var(--paper);
-      }
-
-      .code-panel-dark {
-        border-color: var(--navy-dark);
-        background: var(--navy-dark);
-        color: var(--paper);
-      }
-
-      .code-head {
-        display: flex;
-        min-height: 50px;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 0 12px 0 16px;
-        border-bottom: 1px solid var(--line);
-        background: var(--soft);
-      }
-
-      .code-panel-dark .code-head {
-        border-color: rgba(255, 255, 255, 0.13);
-        background: transparent;
-      }
-
-      .code-head span {
-        color: var(--muted);
-        font-family: var(--mono);
-        font-size: 10px;
-        font-weight: 700;
-      }
-
-      .code-panel-dark .code-head span {
-        color: rgba(255, 255, 255, 0.58);
       }
 
       pre {
@@ -480,19 +249,89 @@
         tab-size: 2;
       }
 
-      .source-code {
-        min-height: 500px;
-        padding: 28px 29px 32px;
+      .terminal pre {
+        padding: 24px 23px 27px;
         color: var(--code-text);
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.85;
       }
 
-      .small-code {
-        padding: 23px 22px 26px;
+      .prompt {
+        color: var(--green);
+      }
+
+      .output-path {
+        color: #94a7b4;
+      }
+
+      .output-preview {
+        margin: 0;
+      }
+
+      .output-preview svg {
+        width: 100%;
+        height: 260px;
+      }
+
+      .output-preview figcaption {
+        padding: 13px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.13);
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 11px;
+      }
+
+      .section {
+        padding: 98px 0;
+      }
+
+      .section-soft {
+        border-top: 1px solid var(--line);
+        background: var(--soft);
+      }
+
+      .section-heading {
+        max-width: 700px;
+        margin-bottom: 45px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        color: var(--navy);
+        font-size: clamp(38px, 4.4vw, 56px);
+        font-weight: 390;
+        letter-spacing: -0.055em;
+        line-height: 1.05;
+      }
+
+      .section-heading p {
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 17px;
+      }
+
+      .scene-grid {
+        display: grid;
+        align-items: stretch;
+        gap: 22px;
+        grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
+      }
+
+      .scene-grid > *,
+      .scene-usage > * {
+        min-width: 0;
+      }
+
+      .code-panel {
+        border-color: var(--navy-dark);
+        color: var(--paper);
+      }
+
+      .source-code {
+        min-height: 470px;
+        padding: 27px 28px 31px;
         color: var(--code-text);
-        font-size: 12px;
-        line-height: 1.8;
+        font-size: 13px;
+        line-height: 1.85;
       }
 
       .tok-key {
@@ -504,364 +343,96 @@
       }
 
       .tok-number {
-        color: #f1b2c3;
+        color: #efb7c5;
       }
 
       .tok-function {
         color: var(--blue);
       }
 
-      .tok-comment {
-        color: #8da1b0;
-      }
-
-      .plain-note {
-        margin: 24px 0 0;
-        padding: 18px 20px;
-        border-left: 3px solid var(--violet);
-        background: var(--soft);
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      .output-grid {
+      .scene-usage {
         display: grid;
-        gap: 24px;
-        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        grid-template-rows: 1fr 1fr;
       }
 
-      .output-figure {
-        margin: 0;
-        overflow: hidden;
+      .usage-block {
+        padding: 24px;
         border: 1px solid var(--line);
         background: var(--paper);
       }
 
-      .output-art {
-        aspect-ratio: 1.65 / 1;
-      }
-
-      .output-art svg {
-        width: 100%;
-        height: 100%;
-      }
-
-      .output-figure figcaption {
-        padding: 16px 18px;
-        border-top: 1px solid var(--line);
-      }
-
-      .output-figure figcaption strong {
-        display: block;
+      .usage-block h3 {
+        margin: 0 0 15px;
         color: var(--navy);
-        font-size: 14px;
+        font-size: 17px;
       }
 
-      .output-figure figcaption span {
-        display: block;
-        margin-top: 2px;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .output-notes {
-        display: grid;
-        gap: 1px;
-        margin-top: 28px;
-        border: 1px solid var(--line);
-        background: var(--line);
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .output-notes div {
-        padding: 20px;
-        background: var(--paper);
-      }
-
-      .output-notes strong {
-        display: block;
-        color: var(--navy);
-        font-size: 13px;
-      }
-
-      .output-notes p {
-        margin: 7px 0 0;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .determinism-grid {
-        display: grid;
-        align-items: start;
-        gap: 60px;
-        grid-template-columns: minmax(0, 0.78fr) minmax(430px, 1.22fr);
-      }
-
-      .control-list {
-        margin: 0;
-        border-top: 1px solid var(--line);
-      }
-
-      .control-list div {
-        padding: 17px 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .control-list dt {
-        color: var(--violet);
-        font-family: var(--mono);
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .control-list dd {
-        margin: 5px 0 0;
+      .usage-block p {
+        margin: 15px 0 0;
         color: var(--muted);
         font-size: 13px;
       }
 
-      .timeline {
-        margin: 0;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        background: var(--paper);
-      }
-
-      .timeline-head {
-        padding: 14px 17px;
-        border-bottom: 1px solid var(--line);
-        color: var(--navy);
-        font-family: var(--mono);
-        font-size: 10px;
-        font-weight: 700;
-      }
-
-      .timeline-scroll {
-        overflow-x: auto;
-        padding: 28px 20px 18px;
-      }
-
-      .timeline-scroll svg {
-        width: 100%;
-        min-width: 560px;
-      }
-
-      .timeline-command {
-        padding: 17px 19px;
-        border-top: 1px solid var(--line);
-        background: var(--navy-dark);
-        color: var(--code-text);
-        font-size: 11px;
-        line-height: 1.7;
-      }
-
-      .timeline figcaption {
-        padding: 15px 18px;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .compat-table,
-      .defaults-table {
-        width: 100%;
-        border-collapse: collapse;
-        border-top: 1px solid var(--line);
-      }
-
-      .table-scroll {
-        max-width: 100%;
-        overflow-x: auto;
-      }
-
-      .compat-table th,
-      .compat-table td,
-      .defaults-table th,
-      .defaults-table td {
+      .usage-code {
         padding: 17px 18px;
-        border-right: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        text-align: left;
-        vertical-align: top;
-      }
-
-      .compat-table th:last-child,
-      .compat-table td:last-child,
-      .defaults-table th:last-child,
-      .defaults-table td:last-child {
-        border-right: 0;
-      }
-
-      .compat-table thead th {
-        background: var(--navy);
-        color: var(--paper);
-        font-size: 13px;
-      }
-
-      .compat-table tbody th,
-      .defaults-table th {
-        color: var(--navy);
-        font-size: 13px;
-      }
-
-      .compat-table td,
-      .defaults-table td {
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .compat-table code,
-      .defaults-table code,
-      .options code,
-      .plain-note code {
-        color: var(--violet);
-        font-size: 0.92em;
-      }
-
-      .boundary {
-        margin: 28px 0 0;
-        padding-top: 24px;
-        border-top: 1px solid var(--line);
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      .reference-grid {
-        display: grid;
-        align-items: start;
-        gap: 44px;
-        grid-template-columns: minmax(0, 0.86fr) minmax(420px, 1.14fr);
-      }
-
-      .reference-grid h3 {
-        margin: 0 0 20px;
-        color: var(--navy);
-        font-size: 23px;
-        font-weight: 520;
-        letter-spacing: -0.025em;
-      }
-
-      .default-command {
-        margin: 0 0 24px;
-        padding: 17px 19px;
         background: var(--navy-dark);
-        color: var(--code-text);
-        font-size: 11px;
-        line-height: 1.8;
-      }
-
-      .default-command .output-path {
-        color: #95a7b4;
-      }
-
-      .json-panel {
-        overflow: hidden;
-        border: 1px solid var(--navy-dark);
-        background: var(--navy-dark);
-      }
-
-      .json-panel pre {
-        padding: 23px 24px 27px;
         color: var(--code-text);
         font-size: 11px;
         line-height: 1.75;
       }
 
-      .json-key {
-        color: var(--blue);
+      .feature-list {
+        margin: 0;
+        border-top: 1px solid var(--line);
       }
 
-      .json-string {
-        color: var(--green);
-      }
-
-      .json-value {
-        color: #c2b8ff;
-      }
-
-      .options {
+      .feature-row {
         display: grid;
-        gap: 1px;
-        margin-top: 50px;
-        border: 1px solid var(--line);
-        background: var(--line);
-        grid-template-columns: repeat(3, 1fr);
+        gap: 42px;
+        grid-template-columns: 200px 1fr;
+        padding: 24px 0;
+        border-bottom: 1px solid var(--line);
       }
 
-      .option-group {
-        min-height: 145px;
-        padding: 20px;
-        background: var(--paper);
-      }
-
-      .option-group h3 {
-        margin: 0 0 12px;
+      .feature-row dt {
         color: var(--navy);
-        font-size: 14px;
+        font-size: 17px;
+        font-weight: 700;
       }
 
-      .option-group p {
+      .feature-row dd {
+        max-width: 690px;
         margin: 0;
         color: var(--muted);
-        font-size: 12px;
-        line-height: 1.8;
       }
 
-      .quickstart {
-        padding: 92px 0;
-        background: var(--navy);
-        color: var(--paper);
+      .read-more {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 28px;
+        margin-top: 42px;
+        padding-top: 28px;
+        border-top: 1px solid var(--line);
       }
 
-      .quickstart-grid {
-        display: grid;
-        align-items: start;
-        gap: 70px;
-        grid-template-columns: minmax(0, 0.7fr) minmax(440px, 1.3fr);
-      }
-
-      .quickstart h2 {
+      .read-more p {
+        max-width: 720px;
         margin: 0;
-        font-size: clamp(38px, 4.4vw, 56px);
-        font-weight: 390;
-        letter-spacing: -0.05em;
-        line-height: 1.05;
+        color: var(--muted);
       }
 
-      .quickstart p {
-        margin: 20px 0 0;
-        color: rgba(255, 255, 255, 0.65);
-      }
-
-      .quickstart-code {
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: var(--navy-dark);
-      }
-
-      .quickstart-code .code-head {
-        border-color: rgba(255, 255, 255, 0.14);
-        background: transparent;
-      }
-
-      .quickstart-code .code-head span {
-        color: rgba(255, 255, 255, 0.55);
-      }
-
-      .quickstart-code pre {
-        padding: 22px 21px 25px;
-        color: var(--code-text);
-        font-size: 11px;
-        line-height: 1.85;
-      }
-
-      .prompt {
-        color: var(--green);
+      .read-more a {
+        flex: 0 0 auto;
+        color: var(--violet);
+        font-weight: 700;
       }
 
       .site-footer {
-        padding: 32px 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 31px 0;
         background: var(--navy-dark);
-        color: rgba(255, 255, 255, 0.54);
+        color: rgba(255, 255, 255, 0.55);
       }
 
       .footer-inner {
@@ -893,38 +464,23 @@
         color: var(--paper);
       }
 
-      @media (max-width: 960px) {
-        .hero-layout {
-          gap: 48px;
-          grid-template-columns: 1fr 0.9fr;
-        }
-
-        .overview-grid {
+      @media (max-width: 860px) {
+        .start-grid,
+        .scene-grid {
           grid-template-columns: 1fr;
         }
 
-        .flow {
-          max-width: 660px;
+        .output-preview svg {
+          height: 330px;
         }
 
-        .usage-grid,
-        .determinism-grid,
-        .reference-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .usage-side {
+        .scene-usage {
           grid-template-columns: 1fr 1fr;
           grid-template-rows: none;
         }
-
-        .quickstart-grid {
-          gap: 46px;
-          grid-template-columns: 0.75fr 1.25fr;
-        }
       }
 
-      @media (max-width: 760px) {
+      @media (max-width: 620px) {
         .container {
           width: min(calc(100% - 30px), var(--content));
         }
@@ -934,101 +490,69 @@
         }
 
         .nav {
-          gap: 20px;
+          gap: 18px;
         }
 
-        .nav-links {
+        .nav a[href="#scene"] {
           display: none;
         }
 
-        .hero-layout {
-          min-height: 0;
-          grid-template-columns: 1fr;
-          padding-top: 64px;
-          padding-bottom: 72px;
+        .hero-inner {
+          padding-top: 58px;
+          padding-bottom: 70px;
         }
 
         .hero h1 {
-          font-size: clamp(47px, 14vw, 66px);
+          font-size: clamp(47px, 14vw, 64px);
         }
 
-        .hero-copy > p {
+        .hero-copy p {
           font-size: 17px;
         }
 
-        .hero-command {
-          align-items: flex-start;
-          flex-direction: column;
+        .start-grid {
+          margin-top: 40px;
         }
 
-        .render-canvas-wrap {
-          height: 330px;
+        .terminal pre {
+          padding: 21px 18px 24px;
+          font-size: 10px;
+        }
+
+        .output-preview svg {
+          height: 240px;
         }
 
         .section {
-          padding: 78px 0;
+          padding: 74px 0;
         }
 
         .section-heading {
-          margin-bottom: 38px;
+          margin-bottom: 34px;
         }
 
-        .section-heading h2,
-        .quickstart h2 {
-          font-size: 40px;
+        .section-heading h2 {
+          font-size: 39px;
         }
 
-        .fact-row {
-          gap: 5px;
-          grid-template-columns: 1fr;
-        }
-
-        .flow-diagram {
-          grid-template-columns: 1fr;
-        }
-
-        .flow-node {
-          min-height: 0;
-        }
-
-        .flow-arrow {
-          transform: rotate(90deg);
-          text-align: center;
-        }
-
-        .usage-side,
-        .output-grid,
-        .output-notes,
-        .options,
-        .quickstart-grid {
+        .scene-usage {
           grid-template-columns: 1fr;
         }
 
         .source-code {
           min-height: 0;
-          padding: 23px 19px 27px;
-          font-size: 11px;
-        }
-
-        .small-code {
+          padding: 22px 18px 26px;
           font-size: 10.5px;
         }
 
-        .output-art {
-          aspect-ratio: 1.4 / 1;
+        .feature-row {
+          gap: 5px;
+          grid-template-columns: 1fr;
         }
 
-        .compat-table {
-          min-width: 700px;
-        }
-
-        .defaults-table th {
-          width: 38%;
-        }
-
-        .json-panel pre {
-          padding: 20px 17px 23px;
-          font-size: 9.5px;
+        .read-more {
+          align-items: flex-start;
+          flex-direction: column;
         }
 
         .footer-inner {
@@ -1040,13 +564,6 @@
       @media (prefers-reduced-motion: reduce) {
         html {
           scroll-behavior: auto;
-        }
-
-        *,
-        *::before,
-        *::after {
-          transition-duration: 0.01ms !important;
-          animation-duration: 0.01ms !important;
         }
       }
     </style>
@@ -1061,150 +578,110 @@
           <strong>Pts.</strong>
           <span>CLI</span>
         </a>
-        <div class="nav-links">
-          <a href="#usage">Usage</a>
-          <a href="#determinism">Determinism</a>
-          <a href="#compatibility">Compatibility</a>
-          <a href="#reference">CLI reference</a>
-        </div>
-        <a href="https://github.com/williamngan/skia-pts-canvas">GitHub</a>
+        <a href="#scene">Scene</a>
+        <a href="https://github.com/williamngan/pts-cli#readme">README</a>
+        <a href="https://github.com/williamngan/pts-cli">GitHub</a>
       </nav>
     </header>
 
     <main id="main">
       <section class="hero" id="top">
-        <div class="hero-layout container">
+        <div class="hero-inner container">
           <div class="hero-copy">
-            <h1>Render Pts.js scenes in Node.</h1>
-            <p>
-              pts-cli uses skia-canvas to render portable Pts scenes and
-              compatible classic demos. It writes raster images and SVG without
-              starting a browser.
-            </p>
-
-            <div class="hero-command">
-              <code id="heroCommand">ptsjs render scene.mjs --json</code>
-              <button
-                class="copy-button"
-                type="button"
-                data-copy-target="heroCommand"
-                aria-label="Copy render command"
-              >
-                Copy
-              </button>
-            </div>
-
-            <div class="hero-formats">PNG, JPEG, WebP, raw RGBA, SVG</div>
-            <div class="hero-meta">
-              Node 20+, CPU renderer by default, preview 0.1
-            </div>
+            <h1>Render Pts.js from the command line.</h1>
+            <p>Generate images and SVG in Node without running a browser.</p>
           </div>
 
-          <figure class="render-figure">
-            <div class="render-frame">
-              <div class="render-frame-head">Canvas 2D preview</div>
-              <div class="render-canvas-wrap" id="canvasWrap">
-                <canvas id="heroCanvas" aria-hidden="true"></canvas>
+          <div class="start-grid">
+            <article class="terminal">
+              <div class="panel-head">
+                <span>Install and render</span>
+                <button
+                  class="copy-button"
+                  type="button"
+                  data-copy-target="startCode"
+                  aria-label="Copy setup commands"
+                >
+                  Copy
+                </button>
               </div>
-            </div>
-            <figcaption>
-              The preview responds to pointer movement. The CLI receives pointer
-              state through flags or an event file.
-            </figcaption>
-          </figure>
-        </div>
-      </section>
+              <pre
+                tabindex="0"
+              ><code id="startCode"><span class="prompt">$</span> git clone https://github.com/williamngan/pts-cli.git
+<span class="prompt">$</span> cd pts-cli
+<span class="prompt">$</span> pnpm install &amp;&amp; pnpm build
+<span class="prompt">$</span> node dist/cli.mjs render examples/basic-card.mjs
 
-      <section class="section" aria-labelledby="overviewTitle">
-        <div class="container">
-          <div class="section-heading">
-            <h2 id="overviewTitle">Overview</h2>
-          </div>
+<span class="output-path">pts-output/basic-card-&lt;render-id&gt;.png</span></code></pre>
+            </article>
 
-          <div class="overview-grid">
-            <dl class="fact-list">
-              <div class="fact-row">
-                <dt>Sources</dt>
-                <dd>
-                  Portable scene modules and a manifest-tested subset of
-                  unchanged classic Pts demos.
-                </dd>
-              </div>
-              <div class="fact-row">
-                <dt>Runtime</dt>
-                <dd>
-                  Pts and skia-canvas run in a fresh worker with a hard timeout
-                  and resource limits.
-                </dd>
-              </div>
-              <div class="fact-row">
-                <dt>Output</dt>
-                <dd>
-                  Multiple raster and SVG files can be encoded from the same
-                  final canvas.
-                </dd>
-              </div>
-              <div class="fact-row">
-                <dt>State</dt>
-                <dd>
-                  Time, frames, pointer input, event timelines, scene
-                  parameters, and randomness are explicit.
-                </dd>
-              </div>
-              <div class="fact-row">
-                <dt>Automation</dt>
-                <dd>
-                  Atomic file writes and one JSON result containing paths,
-                  sizes, hashes, and errors.
-                </dd>
-              </div>
-            </dl>
-
-            <figure class="flow">
-              <div
-                class="flow-diagram"
+            <figure class="output-preview">
+              <div class="panel-head">Example output</div>
+              <svg
                 role="img"
-                aria-label="Source enters a Pts and Skia worker and produces files and JSON"
+                aria-labelledby="previewTitle previewDesc"
+                viewBox="0 0 520 320"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <div class="flow-node">
-                  <strong>scene.mjs</strong>
-                  <span>Portable scene or compatible demo</span>
-                </div>
-                <span class="flow-arrow" aria-hidden="true">→</span>
-                <div class="flow-node">
-                  <strong>worker</strong>
-                  <span>Pts revamp and skia-canvas</span>
-                </div>
-                <span class="flow-arrow" aria-hidden="true">→</span>
-                <div class="flow-node">
-                  <strong>files</strong>
-                  <span>Images, SVG, and JSON result</span>
-                </div>
-              </div>
-              <figcaption>
-                Pts remains an external peer dependency. This package does not
-                patch or modify it.
-              </figcaption>
+                <title id="previewTitle">Example Pts render</title>
+                <desc id="previewDesc">
+                  A violet ring and white geometry on a navy field.
+                </desc>
+                <rect width="520" height="320" fill="#0b1f2e" />
+                <circle
+                  cx="260"
+                  cy="152"
+                  r="92"
+                  fill="none"
+                  stroke="#7566ff"
+                  stroke-width="34"
+                />
+                <circle
+                  cx="260"
+                  cy="152"
+                  r="51"
+                  fill="none"
+                  stroke="#ffffff"
+                  stroke-opacity=".28"
+                  stroke-width="2"
+                />
+                <path
+                  d="M52 61 178 118M468 61 342 118M51 254 180 196M469 254 340 196"
+                  stroke="#ffffff"
+                  stroke-opacity=".32"
+                  stroke-width="2"
+                />
+                <rect x="256" y="148" width="8" height="8" fill="#ffffff" />
+                <text
+                  x="28"
+                  y="294"
+                  fill="#ffffff"
+                  font-family="system-ui, sans-serif"
+                  font-size="17"
+                >
+                  Pts CLI
+                </text>
+              </svg>
+              <figcaption>Rendered from a Pts scene.</figcaption>
             </figure>
           </div>
         </div>
       </section>
 
-      <section class="section section-soft" id="usage">
+      <section class="section" id="scene">
         <div class="container">
           <div class="section-heading">
-            <h2>Portable scenes</h2>
+            <h2>Portable scene module</h2>
             <p>
-              A portable scene is a default-exported object. Its setup callback
-              receives Pts, space, form, parameters, and asset helpers. The same
-              scene object can run in Node or mount in a browser.
+              Export a scene object with ordinary Pts drawing code. The same
+              module can also mount in a browser.
             </p>
           </div>
 
-          <div class="usage-grid">
-            <article class="code-panel code-panel-dark">
-              <div class="code-head">
-                <span>orbit.mjs</span>
+          <div class="scene-grid">
+            <article class="code-panel">
+              <div class="panel-head">
+                <span>circle.mjs</span>
                 <button
                   class="copy-button"
                   type="button"
@@ -1219,23 +696,20 @@
                 tabindex="0"
               ><code id="sceneCode"><span class="tok-key">export default</span> {
   apiVersion: <span class="tok-number">1</span>,
-  width: <span class="tok-number">720</span>,
-  height: <span class="tok-number">440</span>,
+  width: <span class="tok-number">640</span>,
+  height: <span class="tok-number">360</span>,
   background: <span class="tok-string">"#10283a"</span>,
 
-  <span class="tok-function">setup</span>({ Pts, space, form, params }) {
+  <span class="tok-function">setup</span>({ Pts, space, form }) {
     <span class="tok-key">const</span> { Circle } = Pts;
-    <span class="tok-key">const</span> radius =
-      Number(params.radius ?? <span class="tok-number">56</span>);
 
-    space.<span class="tok-function">add</span>((time) =&gt; {
+    space.<span class="tok-function">add</span>(() =&gt; {
       form
         .<span class="tok-function">fillOnly</span>(<span class="tok-string">"#7566ff"</span>)
         .<span class="tok-function">circle</span>(
           Circle.<span class="tok-function">fromCenter</span>(
             space.pointer,
-            radius +
-              Math.<span class="tok-function">sin</span>(time / <span class="tok-number">800</span>) * <span class="tok-number">8</span>
+            <span class="tok-number">48</span>
           )
         );
     });
@@ -1243,564 +717,81 @@
 };</code></pre>
             </article>
 
-            <div class="usage-side">
-              <article class="code-panel code-panel-dark">
-                <div class="code-head">
-                  <span>CLI</span>
-                  <button
-                    class="copy-button"
-                    type="button"
-                    data-copy-target="cliCode"
-                    aria-label="Copy CLI example"
-                  >
-                    Copy
-                  </button>
-                </div>
+            <div class="scene-usage">
+              <article class="usage-block">
+                <h3>Render it</h3>
                 <pre
-                  class="small-code"
+                  class="usage-code"
                   tabindex="0"
-                ><code id="cliCode"><span class="tok-string">ptsjs</span> render orbit.mjs \
-  --pointer 360,220 \
-  --frame 60 --fps 60 \
-  --param radius=56 \
-  --out orbit.png \
-  --out orbit.svg \
-  --json</code></pre>
+                ><code>ptsjs render circle.mjs \
+  --out circle.png \
+  --out circle.svg</code></pre>
+                <p>Both files come from the same final canvas.</p>
               </article>
 
-              <article class="code-panel code-panel-dark">
-                <div class="code-head">
-                  <span>Browser</span>
-                  <button
-                    class="copy-button"
-                    type="button"
-                    data-copy-target="browserCode"
-                    aria-label="Copy browser example"
-                  >
-                    Copy
-                  </button>
-                </div>
+              <article class="usage-block">
+                <h3>Mount it in a browser</h3>
                 <pre
-                  class="small-code"
+                  class="usage-code"
                   tabindex="0"
-                ><code id="browserCode"><span class="tok-key">import</span> { mountScene } <span class="tok-key">from</span>
+                ><code><span class="tok-key">import</span> { mountScene } <span class="tok-key">from</span>
   <span class="tok-string">"pts-cli/browser"</span>;
-<span class="tok-key">import</span> scene <span class="tok-key">from</span> <span class="tok-string">"./orbit.mjs"</span>;
+<span class="tok-key">import</span> scene <span class="tok-key">from</span> <span class="tok-string">"./circle.mjs"</span>;
 
-<span class="tok-key">const</span> mounted =
-  <span class="tok-key">await</span> <span class="tok-function">mountScene</span>(scene, {
-    target: <span class="tok-string">"#pt"</span>
-  });
-
-<span class="tok-comment">// await mounted.dispose();</span></code></pre>
+<span class="tok-key">await</span> <span class="tok-function">mountScene</span>(scene, {
+  target: <span class="tok-string">"#pt"</span>
+});</code></pre>
               </article>
             </div>
           </div>
-
-          <p class="plain-note">
-            Scene dimensions replace <code>Pts.quickStart</code>. The runner
-            replaces <code>bindMouse().play()</code>. Code inside
-            <code>space.add()</code> remains ordinary Pts drawing code.
-          </p>
         </div>
       </section>
 
-      <section class="section" aria-labelledby="outputTitle">
+      <section class="section section-soft" aria-labelledby="featuresTitle">
         <div class="container">
           <div class="section-heading">
-            <h2 id="outputTitle">Raster and SVG output</h2>
+            <h2 id="featuresTitle">Included</h2>
+          </div>
+
+          <dl class="feature-list">
+            <div class="feature-row">
+              <dt>Repeatable renders</dt>
+              <dd>
+                Control the frame, input, parameters, and random seed when a
+                stable result matters.
+              </dd>
+            </div>
+            <div class="feature-row">
+              <dt>Classic demos</dt>
+              <dd>
+                Render a tested subset of unchanged demos through the
+                compatibility loader.
+              </dd>
+            </div>
+            <div class="feature-row">
+              <dt>CLI and API</dt>
+              <dd>
+                Use the <code>ptsjs</code> command or call
+                <code>renderScene()</code> from Node.
+              </dd>
+            </div>
+            <div class="feature-row">
+              <dt>Structured results</dt>
+              <dd>
+                Request JSON output for build scripts, automation, and agents.
+              </dd>
+            </div>
+          </dl>
+
+          <div class="read-more">
             <p>
-              Each requested format is encoded from the same final canvas. A
-              single render may write several outputs.
+              Command options, API types, assets, SVG behavior, and the
+              compatibility matrix are documented in the README.
             </p>
+            <a href="https://github.com/williamngan/pts-cli#readme"
+              >Read the README</a
+            >
           </div>
-
-          <div class="output-grid">
-            <figure class="output-figure">
-              <div class="output-art">
-                <svg
-                  role="img"
-                  aria-labelledby="rasterTitle rasterDesc"
-                  viewBox="0 0 620 375"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title id="rasterTitle">Raster output example</title>
-                  <desc id="rasterDesc">
-                    Concentric violet and white circles on a navy field.
-                  </desc>
-                  <rect width="620" height="375" fill="#10283a" />
-                  <circle
-                    cx="310"
-                    cy="187.5"
-                    r="125"
-                    fill="none"
-                    stroke="#7566ff"
-                    stroke-width="42"
-                  />
-                  <circle
-                    cx="310"
-                    cy="187.5"
-                    r="73"
-                    fill="none"
-                    stroke="#ffffff"
-                    stroke-opacity=".26"
-                    stroke-width="2"
-                  />
-                  <circle cx="310" cy="187.5" r="9" fill="#ffffff" />
-                  <path
-                    d="M46 54 200 132M574 56 420 135M48 322 202 246M571 320 418 246"
-                    stroke="#ffffff"
-                    stroke-opacity=".3"
-                    stroke-width="2"
-                  />
-                </svg>
-              </div>
-              <figcaption>
-                <strong>PNG at density 2</strong>
-                <span
-                  >Raster density changes pixel dimensions, not scene
-                  units.</span
-                >
-              </figcaption>
-            </figure>
-
-            <figure class="output-figure">
-              <div class="output-art">
-                <svg
-                  role="img"
-                  aria-labelledby="svgTitle svgDesc"
-                  viewBox="0 0 620 375"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title id="svgTitle">SVG output example</title>
-                  <desc id="svgDesc">
-                    A violet geometric line network on a white field.
-                  </desc>
-                  <rect width="620" height="375" fill="#ffffff" />
-                  <g
-                    fill="none"
-                    stroke="#10283a"
-                    stroke-opacity=".34"
-                    stroke-width="1.5"
-                  >
-                    <path
-                      d="M34 59 137 102 228 46 314 121 426 62 524 105 590 49"
-                    />
-                    <path
-                      d="M34 59 73 207 137 102 185 263 228 46 314 121 298 314"
-                    />
-                    <path d="M137 102 228 46 185 263 314 121 298 314 426 62" />
-                    <path d="M426 62 449 218 524 105 573 263 590 49" />
-                    <path d="M73 207 31 324 185 263 298 314 449 218 573 263" />
-                    <path d="M185 263 449 218M314 121 449 218" />
-                  </g>
-                  <g fill="#4422ee">
-                    <rect x="30" y="55" width="8" height="8" />
-                    <rect x="133" y="98" width="8" height="8" />
-                    <rect x="224" y="42" width="8" height="8" />
-                    <rect x="310" y="117" width="8" height="8" />
-                    <rect x="422" y="58" width="8" height="8" />
-                    <rect x="445" y="214" width="8" height="8" />
-                    <rect x="294" y="310" width="8" height="8" />
-                    <rect x="569" y="259" width="8" height="8" />
-                  </g>
-                </svg>
-              </div>
-              <figcaption>
-                <strong>SVG with outlined text</strong>
-                <span
-                  >Canvas drawing commands are recorded by Skia as SVG.</span
-                >
-              </figcaption>
-            </figure>
-          </div>
-
-          <div class="output-notes">
-            <div>
-              <strong>Raster</strong>
-              <p>
-                Density, JPEG/WebP quality, transparency, and matte are
-                configurable.
-              </p>
-            </div>
-            <div>
-              <strong>SVG</strong>
-              <p>
-                Text may be preserved or converted to paths. Raster images
-                remain embedded rasters.
-              </p>
-            </div>
-            <div>
-              <strong>Atomic writes</strong>
-              <p>
-                Existing files are protected unless <code>--force</code> is
-                supplied.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section-soft" id="determinism">
-        <div class="container">
-          <div class="section-heading">
-            <h2>Deterministic rendering</h2>
-            <p>
-              The clock, input, scene parameters, and random seed can be
-              supplied explicitly. Native pixels and fonts may still vary across
-              platforms.
-            </p>
-          </div>
-
-          <div class="determinism-grid">
-            <dl class="control-list">
-              <div>
-                <dt>--time &lt;ms&gt;</dt>
-                <dd>Render one frame at the timestamp with a zero delta.</dd>
-              </div>
-              <div>
-                <dt>--frame &lt;index&gt; --fps &lt;rate&gt;</dt>
-                <dd>Simulate every frame from zero through the index.</dd>
-              </div>
-              <div>
-                <dt>--pointer &lt;x&gt;,&lt;y&gt;</dt>
-                <dd>
-                  Set initial pointer state without dispatching an action.
-                </dd>
-              </div>
-              <div>
-                <dt>--events &lt;file.json&gt;</dt>
-                <dd>
-                  Replay move, down, drag, up, and resize events by timestamp.
-                </dd>
-              </div>
-              <div>
-                <dt>--seed &lt;string&gt;</dt>
-                <dd>
-                  Seed Pts randomness and the worker's Math.random stream.
-                </dd>
-              </div>
-              <div>
-                <dt>--param &lt;key=value&gt;</dt>
-                <dd>
-                  Override a named scene parameter. The flag is repeatable.
-                </dd>
-              </div>
-            </dl>
-
-            <figure class="timeline">
-              <div class="timeline-head">events.json</div>
-              <div class="timeline-scroll" tabindex="0">
-                <svg
-                  role="img"
-                  aria-labelledby="timelineTitle timelineDesc"
-                  viewBox="0 0 650 190"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title id="timelineTitle">Input event timeline</title>
-                  <desc id="timelineDesc">
-                    Move, down, drag, and up events are applied before matching
-                    frame boundaries.
-                  </desc>
-                  <path d="M42 98H608" stroke="#9baab4" stroke-width="1" />
-                  <g
-                    fill="#52697c"
-                    font-family="monospace"
-                    font-size="10"
-                    text-anchor="middle"
-                  >
-                    <text x="42" y="129">0ms</text>
-                    <text x="184" y="129">250</text>
-                    <text x="326" y="129">500</text>
-                    <text x="468" y="129">750</text>
-                    <text x="608" y="129">1000</text>
-                  </g>
-                  <g stroke="#9baab4">
-                    <path
-                      d="M42 88v20M184 88v20M326 88v20M468 88v20M608 88v20"
-                    />
-                  </g>
-                  <path
-                    d="M70 70C182 32 270 143 361 68s167-20 218-16"
-                    fill="none"
-                    stroke="#4422ee"
-                    stroke-width="2"
-                  />
-                  <g fill="#4422ee">
-                    <rect x="66" y="66" width="8" height="8" />
-                    <rect x="322" y="89" width="8" height="8" />
-                    <rect x="463" y="49" width="8" height="8" />
-                    <rect x="575" y="48" width="8" height="8" />
-                  </g>
-                  <g
-                    fill="#10283a"
-                    font-family="monospace"
-                    font-size="10"
-                    text-anchor="middle"
-                  >
-                    <text x="70" y="51">move</text>
-                    <text x="326" y="78">down</text>
-                    <text x="467" y="38">drag</text>
-                    <text x="579" y="37">up</text>
-                  </g>
-                  <g fill="#b9c4cb">
-                    <rect x="40" y="158" width="4" height="4" />
-                    <rect x="96" y="158" width="4" height="4" />
-                    <rect x="152" y="158" width="4" height="4" />
-                    <rect x="208" y="158" width="4" height="4" />
-                    <rect x="264" y="158" width="4" height="4" />
-                    <rect x="320" y="158" width="4" height="4" />
-                    <rect x="376" y="158" width="4" height="4" />
-                    <rect x="432" y="158" width="4" height="4" />
-                    <rect x="488" y="158" width="4" height="4" />
-                    <rect x="544" y="158" width="4" height="4" />
-                    <rect x="604" y="158" width="4" height="4" />
-                  </g>
-                  <text
-                    x="42"
-                    y="181"
-                    fill="#52697c"
-                    font-family="monospace"
-                    font-size="9"
-                  >
-                    simulated frame boundaries
-                  </text>
-                </svg>
-              </div>
-              <pre
-                class="timeline-command"
-                tabindex="0"
-              ><code>ptsjs render trail.mjs --frame 60 --fps 60 \
-  --events events.json --seed cover-v1</code></pre>
-              <figcaption>
-                Events are dispatched before the first frame boundary that
-                reaches their timestamp.
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="compatibility">
-        <div class="container">
-          <div class="section-heading">
-            <h2>Source compatibility</h2>
-            <p>
-              New scenes should use the portable module format. The classic
-              loader supports a tested subset of existing Pts demos.
-            </p>
-          </div>
-
-          <div
-            class="table-scroll"
-            role="region"
-            tabindex="0"
-            aria-label="Scrollable source compatibility table"
-          >
-            <table class="compat-table">
-              <thead>
-                <tr>
-                  <th scope="col">Source</th>
-                  <th scope="col">Loader</th>
-                  <th scope="col">Behavior</th>
-                  <th scope="col">Browser reuse</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">Portable scene</th>
-                  <td><code>scene</code></td>
-                  <td>
-                    Default-exported object with explicit setup and dimensions.
-                  </td>
-                  <td>
-                    Mount the same object with <code>pts-cli/browser</code>.
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">Classic demo</th>
-                  <td><code>pts-demo</code></td>
-                  <td>
-                    Supplies Pts globals, <code>Pts.quickStart</code>, and a
-                    bounded CanvasSpace facade.
-                  </td>
-                  <td>
-                    The original compatible browser demo remains unchanged.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p class="boundary">
-            The compatibility layer is not a DOM emulator. HTMLSpace, SVGSpace,
-            audio, microphone, video, editable pixel workflows, and arbitrary
-            browser timers are outside its boundary. SVG file output remains
-            available because it records Canvas drawing commands. Scene modules
-            execute arbitrary JavaScript and should be treated as trusted code.
-          </p>
-        </div>
-      </section>
-
-      <section class="section section-soft" id="reference">
-        <div class="container">
-          <div class="section-heading">
-            <h2>CLI defaults and results</h2>
-            <p>Only the source argument is required.</p>
-          </div>
-
-          <div class="reference-grid">
-            <div>
-              <h3>Defaults</h3>
-              <pre
-                class="default-command"
-                tabindex="0"
-              ><code>ptsjs render sketch.mjs
-<span class="output-path"># pts-output/sketch-&lt;uuid&gt;.png</span></code></pre>
-
-              <table class="defaults-table">
-                <tbody>
-                  <tr>
-                    <th scope="row">Loader</th>
-                    <td>Syntax-aware <code>auto</code></td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Size</th>
-                    <td>Scene size, otherwise 800 × 600</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Pointer</th>
-                    <td>Canvas center</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Clock</th>
-                    <td>One frame at 0ms</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Renderer</th>
-                    <td>CPU</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Timeout</th>
-                    <td>30,000ms</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div>
-              <h3>JSON result</h3>
-              <article class="json-panel">
-                <div class="code-head">
-                  <span>stdout</span>
-                  <button
-                    class="copy-button"
-                    type="button"
-                    data-copy-target="jsonCode"
-                    aria-label="Copy JSON result"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <pre tabindex="0"><code id="jsonCode">{
-  <span class="json-key">"ok"</span>: <span class="json-value">true</span>,
-  <span class="json-key">"schemaVersion"</span>: <span class="json-value">1</span>,
-  <span class="json-key">"renderId"</span>: <span class="json-string">"550e8400-e29b-41d4-a716-446655440000"</span>,
-  <span class="json-key">"loader"</span>: <span class="json-string">"scene"</span>,
-  <span class="json-key">"width"</span>: <span class="json-value">720</span>,
-  <span class="json-key">"height"</span>: <span class="json-value">440</span>,
-  <span class="json-key">"outputs"</span>: [
-    {
-      <span class="json-key">"format"</span>: <span class="json-string">"svg"</span>,
-      <span class="json-key">"bytes"</span>: <span class="json-value">18342</span>,
-      <span class="json-key">"sha256"</span>: <span class="json-string">"79c45e…"</span>,
-      <span class="json-key">"path"</span>: <span class="json-string">"/work/out/orbit.svg"</span>
-    }
-  ]
-}</code></pre>
-              </article>
-            </div>
-          </div>
-
-          <div class="options">
-            <article class="option-group">
-              <h3>Output</h3>
-              <p>
-                <code>--out</code> <code>--format</code> <code>--density</code>
-                <code>--quality</code> <code>--matte</code>
-                <code>--text-mode</code>
-              </p>
-            </article>
-            <article class="option-group">
-              <h3>Scene</h3>
-              <p>
-                <code>--loader</code> <code>--size</code>
-                <code>--background</code> <code>--params</code>
-                <code>--param</code>
-              </p>
-            </article>
-            <article class="option-group">
-              <h3>State</h3>
-              <p>
-                <code>--time</code> <code>--frame</code> <code>--fps</code>
-                <code>--pointer</code> <code>--events</code> <code>--seed</code>
-              </p>
-            </article>
-            <article class="option-group">
-              <h3>Assets</h3>
-              <p>
-                <code>--asset-root</code> <code>--allow-net</code>
-                <code>--font</code>
-              </p>
-            </article>
-            <article class="option-group">
-              <h3>Runtime</h3>
-              <p>
-                <code>--renderer</code> <code>--timeout</code>
-                <code>--limit</code> <code>--force</code>
-              </p>
-            </article>
-            <article class="option-group">
-              <h3>Process output</h3>
-              <p>
-                <code>--json</code> <code>--quiet</code>
-                <code>--debug</code>
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="quickstart">
-        <div class="quickstart-grid container">
-          <div>
-            <h2>Run from this repository</h2>
-            <p>
-              The current package is a private 0.1 preview. The package name is
-              <strong>pts-cli</strong>; the executable is
-              <strong>ptsjs</strong>.
-            </p>
-          </div>
-
-          <article class="quickstart-code">
-            <div class="code-head">
-              <span>Shell</span>
-              <button
-                class="copy-button"
-                type="button"
-                data-copy-target="installCode"
-                aria-label="Copy setup commands"
-              >
-                Copy
-              </button>
-            </div>
-            <pre
-              tabindex="0"
-            ><code id="installCode"><span class="prompt">$</span> git clone https://github.com/williamngan/skia-pts-canvas.git
-<span class="prompt">$</span> cd skia-pts-canvas
-<span class="prompt">$</span> pnpm install &amp;&amp; pnpm build
-<span class="prompt">$</span> node dist/cli.mjs render examples/basic-card.mjs --json</code></pre>
-          </article>
         </div>
       </section>
     </main>
@@ -1810,12 +801,9 @@
         <strong>Pts.</strong>
         <div class="footer-links">
           <a href="https://ptsjs.org/">Pts.js</a>
-          <a href="https://github.com/williamngan/skia-pts-canvas#readme"
-            >Documentation</a
-          >
-          <a href="https://github.com/williamngan/skia-pts-canvas">GitHub</a>
-          <a
-            href="https://github.com/williamngan/skia-pts-canvas/blob/main/LICENSE"
+          <a href="https://github.com/williamngan/pts-cli#readme">README</a>
+          <a href="https://github.com/williamngan/pts-cli">GitHub</a>
+          <a href="https://github.com/williamngan/pts-cli/blob/main/LICENSE"
             >License</a
           >
         </div>
@@ -1864,171 +852,6 @@
           }, 1500);
         });
       });
-
-      const setupPreview = () => {
-        const canvas = document.getElementById("heroCanvas");
-        const wrap = document.getElementById("canvasWrap");
-        const context = canvas.getContext("2d");
-        if (!context) return;
-
-        const reducedMotion = window.matchMedia(
-          "(prefers-reduced-motion: reduce)",
-        ).matches;
-        let width = 0;
-        let height = 0;
-        let points = [];
-        let pointer = { x: 0, y: 0 };
-        let target = { x: 0, y: 0 };
-        let frame = 0;
-        let visible = true;
-
-        const random = (() => {
-          let state = 1977;
-          return () => {
-            state = (state * 1664525 + 1013904223) >>> 0;
-            return state / 4294967296;
-          };
-        })();
-
-        const makePoints = () => {
-          points = Array.from({ length: 72 }, () => ({
-            x: random() * width,
-            y: random() * height,
-            phase: random() * Math.PI * 2,
-          }));
-        };
-
-        const resize = () => {
-          const bounds = wrap.getBoundingClientRect();
-          const scale = Math.min(window.devicePixelRatio || 1, 2);
-          width = Math.max(1, bounds.width);
-          height = Math.max(1, bounds.height);
-          canvas.width = Math.round(width * scale);
-          canvas.height = Math.round(height * scale);
-          canvas.style.width = width + "px";
-          canvas.style.height = height + "px";
-          context.setTransform(scale, 0, 0, scale, 0, 0);
-          pointer = { x: width * 0.68, y: height * 0.4 };
-          target = { ...pointer };
-          makePoints();
-          if (reducedMotion) draw(0);
-        };
-
-        const draw = (time) => {
-          frame = 0;
-          context.clearRect(0, 0, width, height);
-          pointer.x += (target.x - pointer.x) * 0.07;
-          pointer.y += (target.y - pointer.y) * 0.07;
-
-          const centerX = width / 2;
-          const centerY = height / 2;
-          const vectorX = pointer.x - centerX;
-          const vectorY = pointer.y - centerY;
-          const denominator = vectorX * vectorX + vectorY * vectorY || 1;
-          const rotation = reducedMotion ? 0 : time * 0.000022;
-          const cosine = Math.cos(rotation);
-          const sine = Math.sin(rotation);
-
-          points.forEach((point, index) => {
-            const offsetX = point.x - centerX;
-            const offsetY = point.y - centerY;
-            const x =
-              centerX +
-              offsetX * cosine -
-              offsetY * sine +
-              Math.sin(point.phase + time * 0.0003) * 1.5;
-            const y =
-              centerY +
-              offsetX * sine +
-              offsetY * cosine +
-              Math.cos(point.phase + time * 0.00025) * 1.5;
-            const projection =
-              ((x - centerX) * vectorX + (y - centerY) * vectorY) / denominator;
-            const projectedX = centerX + projection * vectorX;
-            const projectedY = centerY + projection * vectorY;
-            const distance = Math.hypot(projectedX - x, projectedY - y);
-            const strength = Math.max(0, 1 - distance / (width * 0.4));
-
-            context.beginPath();
-            context.moveTo(x, y);
-            context.lineTo(projectedX, projectedY);
-            context.strokeStyle = "rgba(255,255,255," + strength * 0.28 + ")";
-            context.lineWidth = 0.5 + strength;
-            context.stroke();
-
-            context.fillStyle = index % 4 === 0 ? "#7566ff" : "#ffffff";
-            context.globalAlpha = 0.45 + strength * 0.55;
-            context.fillRect(x - 1.5, y - 1.5, 3, 3);
-            context.globalAlpha = 1;
-          });
-
-          context.fillStyle = "#ffffff";
-          context.fillRect(pointer.x - 3, pointer.y - 3, 6, 6);
-          start();
-        };
-
-        const start = () => {
-          if (reducedMotion || frame || document.hidden || !visible) return;
-          frame = requestAnimationFrame(draw);
-        };
-
-        const stop = () => {
-          if (!frame) return;
-          cancelAnimationFrame(frame);
-          frame = 0;
-        };
-
-        wrap.addEventListener(
-          "pointermove",
-          (event) => {
-            const bounds = wrap.getBoundingClientRect();
-            target.x = Math.max(
-              0,
-              Math.min(width, event.clientX - bounds.left),
-            );
-            target.y = Math.max(
-              0,
-              Math.min(height, event.clientY - bounds.top),
-            );
-            if (reducedMotion) draw(0);
-          },
-          { passive: true },
-        );
-
-        wrap.addEventListener("pointerleave", () => {
-          target = { x: width * 0.68, y: height * 0.4 };
-          if (reducedMotion) draw(0);
-        });
-
-        if ("ResizeObserver" in window) {
-          const resizeObserver = new ResizeObserver(resize);
-          resizeObserver.observe(wrap);
-        } else {
-          window.addEventListener("resize", resize, { passive: true });
-        }
-
-        if ("IntersectionObserver" in window) {
-          const observer = new IntersectionObserver(
-            ([entry]) => {
-              visible = entry.isIntersecting;
-              if (visible) start();
-              else stop();
-            },
-            { rootMargin: "100px 0px" },
-          );
-          observer.observe(wrap);
-        }
-
-        document.addEventListener("visibilitychange", () => {
-          if (document.hidden) stop();
-          else start();
-        });
-
-        resize();
-        start();
-      };
-
-      setupPreview();
     </script>
   </body>
 </html>

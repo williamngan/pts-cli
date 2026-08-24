@@ -40,8 +40,7 @@
 
 ### Changed
 
-- Package identity is now `pts-cli`; the remote repository name remains
-  `skia-pts-canvas`.
+- Package and repository identity are now `pts-cli`.
 - skia-canvas is a normal exact runtime dependency. Pts remains the single
   unbundled revamp peer.
 - `SkiaCanvasSpace` now supports deterministic pointer/actions, runner-owned
