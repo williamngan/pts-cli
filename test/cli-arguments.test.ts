@@ -28,7 +28,7 @@ function outputPath(
 describe("CLI output defaults", () => {
   it("generates a recognizable unique PNG destination when --out is omitted", async () => {
     const first = renderCommand(
-      await parseCLIArguments(["render", "art/My Café.scene.mjs"]),
+      await parseCLIArguments(["art/My Café.scene.mjs"]),
     );
     const second = renderCommand(
       await parseCLIArguments(["render", "art/My Café.scene.mjs"]),
@@ -37,6 +37,8 @@ describe("CLI output defaults", () => {
     expect(first.renderId).toMatch(uuidPattern);
     expect(second.renderId).toMatch(uuidPattern);
     expect(second.renderId).not.toBe(first.renderId);
+    expect(first.source).toBe("art/My Café.scene.mjs");
+    expect(second.source).toBe(first.source);
     expect(first.options.outputs).toHaveLength(1);
     expect(first.options.outputs[0]?.format).toBe("png");
     expect(outputPath(first.options.outputs[0]!)).toBe(
@@ -87,7 +89,7 @@ describe("CLI output defaults", () => {
 
   it("preserves exact output paths and rejects a value-less --out", async () => {
     const explicit = renderCommand(
-      await parseCLIArguments(["render", "scene.mjs", "--out", "art.png"]),
+      await parseCLIArguments(["scene.mjs", "--out", "art.png"]),
     );
     expect(explicit.options.outputs).toEqual([
       { path: "art.png", format: "png" },
@@ -95,6 +97,10 @@ describe("CLI output defaults", () => {
 
     await expect(
       parseCLIArguments(["render", "scene.mjs", "--out", "--json"]),
+    ).rejects.toMatchObject({ code: "CLI_USAGE", phase: "arguments" });
+
+    await expect(
+      parseCLIArguments(["one.mjs", "two.mjs"]),
     ).rejects.toMatchObject({ code: "CLI_USAGE", phase: "arguments" });
   });
 });

@@ -10,7 +10,7 @@ describe("portable scene contract", () => {
       apiVersion: 1 as const,
       width: 20,
       height: 10,
-      setup() {},
+      run() {},
     };
 
     expect(defineScene(scene)).toBe(scene);
@@ -20,47 +20,56 @@ describe("portable scene contract", () => {
     const scene = validateScene({
       name: "fixture",
       metadata: { nested: [1, true, null] },
-      setup() {},
+      run() {},
     });
     expect(scene.name).toBe("fixture");
 
     expect(() =>
       validateScene({
-        setup() {},
+        run() {},
         output: "scene.png",
       }),
     ).toThrow(/scene\.output is not a supported key/);
-    expect(() => validateScene({ apiVersion: 2, setup() {} })).toThrow(
+    expect(() => validateScene({ apiVersion: 2, run() {} })).toThrow(
       /apiVersion/,
     );
-    expect(() => validateScene({ width: 1.5, setup() {} })).toThrow(/width/);
+    expect(() => validateScene({ width: 1.5, run() {} })).toThrow(/width/);
+  });
+
+  it("accepts a run function as the complete render file", () => {
+    const run = () => undefined;
+    const scene = validateScene(run);
+
+    expect(scene.run).toBe(run);
+    expect(scene.width).toBeUndefined();
+    expect(scene.height).toBeUndefined();
   });
 
   it("rejects non-JSON metadata and cycles with an inspectable path", () => {
     expect(() =>
-      validateScene({ metadata: { value: Number.NaN }, setup() {} }),
+      validateScene({ metadata: { value: Number.NaN }, run() {} }),
     ).toThrow(/metadata\.value/);
 
     const cyclic: Record<string, unknown> = {};
     cyclic.self = cyclic;
-    expect(() => validateScene({ metadata: cyclic, setup() {} })).toThrow(
+    expect(() => validateScene({ metadata: cyclic, run() {} })).toThrow(
       /must not contain a cycle/,
     );
   });
 
   it("requires paired dimensions and plain, own data properties", () => {
-    expect(() => validateScene({ width: 10, setup() {} })).toThrow(
+    expect(() => validateScene({ width: 10, run() {} })).toThrow(
       /width and height together/,
     );
     expect(() =>
-      validateScene(Object.assign(new (class Scene {})(), { setup() {} })),
+      validateScene(Object.assign(new (class Scene {})(), { run() {} })),
     ).toThrow(/plain object/);
-    expect(() =>
-      validateScene({ setup() {}, [Symbol("extra")]: true }),
-    ).toThrow(/symbol keys/);
+    expect(() => validateScene({ run() {}, [Symbol("extra")]: true })).toThrow(
+      /symbol keys/,
+    );
 
     let getterCalls = 0;
-    const accessor = Object.defineProperty({}, "setup", {
+    const accessor = Object.defineProperty({}, "run", {
       get() {
         getterCalls += 1;
         return () => undefined;

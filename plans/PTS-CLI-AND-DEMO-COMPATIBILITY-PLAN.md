@@ -346,13 +346,13 @@ must be safe to import in a browser bundle and must not import `skia-canvas`.
 
 #### Loader layer
 
-Loads either a scene module or a classic script and returns a normalized scene
-setup plus metadata and compatibility notices. Loader-specific shims do not leak
-into the adapter.
+Loads either a render file or a classic script and returns a normalized `run`
+entry point plus metadata and compatibility notices. Loader-specific shims do
+not leak into the adapter.
 
 #### Runner layer
 
-Resolves option precedence, creates the space, invokes async setup, simulates
+Resolves option precedence, creates the space, invokes async `run`, simulates
 inputs and frames, calls exporters, and guarantees cleanup.
 
 #### CLI layer
@@ -386,14 +386,14 @@ interface LoadedScene {
 }
 ```
 
-For a portable module, loading imports and validates the default object,
-`requestedConfig` comes from that object, and `execute` calls its `setup`. For a
-classic demo, loading parses but does not evaluate the script, `requestedConfig`
-is normally empty, and `execute` runs it once against the already constructed
-`LegacyDemoSpace`. quickStart/setup background is applied during that execution
-before player registration. This contract keeps the runner linear without
-executing legacy source twice or requiring static evaluation of JavaScript
-arguments.
+For a portable file, loading imports and validates the default function or
+configured object, `requestedConfig` comes from an object when present, and
+`execute` calls `run`. For a classic demo, loading parses but does not evaluate
+the script, `requestedConfig` is normally empty, and `execute` runs it once
+against the already constructed `LegacyDemoSpace`. quickStart/setup background
+is applied during that execution before player registration. This contract keeps
+the runner linear without executing legacy source twice or requiring static
+evaluation of JavaScript arguments.
 
 `sourceURL` is always canonical and absolute. The portable loader resolves and
 normalizes `assetBaseURL` before the context's asset service is created; the
@@ -415,6 +415,8 @@ export { renderScene };
 export type {
   PtsScene,
   PtsSceneContext,
+  PtsSceneRun,
+  PtsSceneSource,
   RenderSceneOptions,
   RenderSceneResult,
   RenderOutputRequest,
@@ -429,15 +431,16 @@ export type { PtsScene, PtsSceneContext };
 
 // pts-cli/browser -- browser-only, with no Skia/Node dependency edge
 export function mountScene(
-  scene: PtsScene,
+  scene: PtsSceneSource,
   options: MountSceneOptions,
 ): Promise<MountedScene>;
 ```
 
 `defineScene` is an identity function used for inference, exact top-level key
-checking in editors, and discoverability. It is never required at runtime. Plain
-default-exported objects are the canonical JavaScript format, so a portable
-scene does not need to import the CLI package at all.
+checking in editors, and discoverability. It is never required at runtime. A
+default-exported `run` function is the simplest JavaScript format; a plain
+object adds optional file-level configuration. Neither form needs to import the
+CLI package.
 
 The `pts-cli/scene` and `pts-cli/browser` builds must have no Node built-ins,
 Skia imports, or native dependency edges. A package/build and browser-bundler
@@ -500,6 +503,7 @@ The CLI must install as a working product, while Pts must resolve only once:
 ```ts
 type Awaitable<T> = T | Promise<T>;
 type SceneCleanup = () => Awaitable<void>;
+type PtsSceneRun = (context: PtsSceneContext) => Awaitable<void | SceneCleanup>;
 
 interface PtsScene {
   /** Schema version; omitted means version 1. */
@@ -523,8 +527,10 @@ interface PtsScene {
   readonly assetBaseURL?: string | URL;
 
   /** Register Pts players and initialize assets. */
-  readonly setup: (context: PtsSceneContext) => Awaitable<void | SceneCleanup>;
+  readonly run: PtsSceneRun;
 }
+
+type PtsSceneSource = PtsScene | PtsSceneRun;
 
 interface PtsSceneContext {
   /** The exact Pts module namespace used by the host renderer. */
@@ -576,44 +582,39 @@ The schema intentionally does not contain output paths, format, density,
 quality, text outlining, overwrite policy, or process behavior. Those belong to
 the caller.
 
-### 9.2 Recommended JavaScript scene
+### 9.2 Recommended JavaScript render file
 
 ```js
-export default {
-  name: "Intersecting circles",
-  width: 640,
-  height: 360,
-  background: "#fe3",
+export default function run({ Pts, space, form }) {
+  const { Circle } = Pts;
 
-  setup({ Pts, space, form }) {
-    const { Circle } = Pts;
+  space.add((time, ftime) => {
+    const c1 = Circle.fromCenter(space.pointer, space.size.y / 4);
+    const c2 = Circle.fromCenter(space.pointer, space.size.y / 8);
+    const target = Circle.fromCenter(space.center, space.size.y / 4);
 
-    space.add((time, ftime) => {
-      const c1 = Circle.fromCenter(space.pointer, space.size.y / 4);
-      const c2 = Circle.fromCenter(space.pointer, space.size.y / 8);
-      const target = Circle.fromCenter(space.center, space.size.y / 4);
-
-      form.fillOnly("#0c6").circle(c1);
-      form.fill("#fe3").circle(c2);
-      form.fill("rgba(70,30,240,.2)").circle(target);
-    });
-  },
-};
+    form.fillOnly("#0c6").circle(c1);
+    form.fill("#fe3").circle(c2);
+    form.fill("rgba(70,30,240,.2)").circle(target);
+  });
+}
 ```
 
 The callback body is copied directly from the web-demo idiom. The only required
-structural changes are replacing global bootstrap code with a default scene
-object and destructuring the Pts symbols used by the scene. Supplying `Pts`
+structural changes are replacing global bootstrap code with a default `run`
+function and destructuring the Pts symbols used by the file. Supplying `Pts`
 through the context guarantees that geometry, players, seeding, and the adapter
-all use one exact Pts module instance.
+all use one exact Pts module instance. A file that needs its own defaults may
+instead export `{ run, width, height, background }`; dimensions remain optional
+as a pair and fall back to `800x600` in the CLI.
 
 The authoring delta is deliberately mechanical:
 
 | Standard web-demo harness              | Portable scene equivalent                        |
 | -------------------------------------- | ------------------------------------------------ |
 | `Pts.namespace(this)`                  | destructure only used symbols from `context.Pts` |
-| `Pts.quickStart("#pt", "#fe3")`        | `background: "#fe3"` plus `setup(context)`       |
-| container determines initial size      | scene `width`/`height` or caller override        |
+| `Pts.quickStart("#pt", "#fe3")`        | file or caller background                        |
+| container determines initial size      | file, caller, or `800x600` CLI default           |
 | `run(animate, start, action, resize)`  | `space.add({ animate, start, action, resize })`  |
 | `space.bindMouse().bindTouch().play()` | browser mount or CLI runner owns it              |
 | browser-relative image/font loading    | `context.assets` with a scene-relative URL       |
@@ -633,13 +634,13 @@ internals still cross the declared compatibility boundary.
 
 ### 9.3 Browser use
 
-A browser entry point mounts the same object:
+A browser entry point mounts the same function or configured object:
 
 ```js
 import { mountScene } from "pts-cli/browser";
-import scene from "./circles.mjs";
+import run from "./circles.mjs";
 
-const mounted = await mountScene(scene, {
+const mounted = await mountScene(run, {
   target: "#pt",
   resize: true,
   retina: true,
@@ -677,9 +678,9 @@ interface MountedScene {
 ```
 
 `mountScene` imports the caller's Pts peer, creates the normal browser
-CanvasSpace/Form, supplies that exact namespace to setup, implements browser
+CanvasSpace/Form, supplies that exact namespace to `run`, implements browser
 assets with browser image primitives and `FontFace`, and binds/plays by default.
-It handles the race where async setup crosses CanvasSpace's ready event,
+It handles the race where async `run` crosses CanvasSpace's ready event,
 ensuring every initial player receives one resize and one start in the same
 two-pass order as the Node runner. It does so in this package's wrapper; it does
 not patch Pts source or global prototypes.
@@ -690,7 +691,7 @@ The browser mount algorithm is explicit:
 2. create a non-playing CanvasSpace and await its normal ready/bounds event;
 3. install a per-instance registration gate for `add`, `remove`, and
    `removeAll`; never modify a prototype;
-4. run and await setup plus tracked assets while the gate records the exact
+4. invoke and await `run` plus tracked assets while the gate records the exact
    surviving player set and preserves player identity/insertion order;
 5. close the gate, register survivors without firing incidental lifecycle
    callbacks, then run one resize pass followed by one start pass;
@@ -716,8 +717,8 @@ allows the DOM container to determine live size after the initial scene/default
 size. Fixed mode honors the scene or explicit dimensions. `dispose` aborts only
 the helper's internal controller (never the caller's signal), awaits scene
 cleanup, unbinds listeners owned by this mount, and disposes the space exactly
-once. It is idempotent, including after partial setup. An external abort behaves
-like `dispose` plus an abort error to a pending mount call.
+once. It is idempotent, including after partial initialization. An external
+abort behaves like `dispose` plus an abort error to a pending mount call.
 
 Relative browser asset strings use, in order: an explicit mount option, the
 scene's `assetBaseURL`, then `document.baseURI` with a warning. Passing a URL
@@ -758,31 +759,31 @@ This invariant also lets a globally or transiently installed CLI render a scene
 that does not itself import `pts`; the scene receives the CLI's validated peer
 instance through its context.
 
-### 9.5 Setup and cleanup rules
+### 9.5 Run and cleanup rules
 
-1. Module top-level code should declare the scene only. Rendering, random scene
-   construction, and asset loading belong in `setup`.
-2. `setup` may be synchronous or async.
-3. `setup` registers players through ordinary `space.add` calls.
-4. While initial setup is active, registration is deferred: the runner does not
-   invoke each player's initial `resize` and `start` until setup and tracked
+1. Module top-level code should declare the render only. Rendering, random scene
+   construction, and asset loading belong in `run`.
+2. `run` may be synchronous or async.
+3. `run` registers players through ordinary `space.add` calls.
+4. While initial `run` is active, registration is deferred: the runner does not
+   invoke each player's initial `resize` and `start` until `run` and tracked
    asset work complete. It then runs a resize pass over initial players followed
    by a start pass, both in stable insertion order, matching the reviewed
    browser-ready pattern used by standard demos.
-5. After initial setup, runner-managed spaces mirror the reviewed browser Pts
+5. After initial `run`, runner-managed spaces mirror the reviewed browser Pts
    behavior: adding a player to an initialized bound invokes its `resize`
    immediately but does not invent a late `start`. The existing low-level Node
    adapter retains its immediate resize/start convenience for backward
    compatibility outside a runner or browser mount. This policy difference is
    internal and has an explicit lifecycle mode; it is never inferred from call
    timing.
-6. If `setup` returns a cleanup function, the runner awaits it exactly once in
+6. If `run` returns a cleanup function, the runner awaits it exactly once in
    `finally`, after all exports settle and before the worker exits.
-7. A setup failure still disposes any space the runner created; deferred players
-   do not receive `start` after a failed setup.
+7. A `run` failure still disposes any space the runner created; deferred players
+   do not receive `start` after a failed `run`.
 8. Cleanup errors are reported without hiding an earlier load/render/export
    error.
-9. Output configuration returned from setup is ignored; scene code cannot
+9. Output configuration returned from `run` is ignored; render code cannot
    redirect the caller's output.
 
 ### 9.6 Scene validation
@@ -790,9 +791,9 @@ instance through its context.
 Reject with a stable scene-validation error when:
 
 - the module has no default export;
-- the default export is not a plain scene object;
+- the default export is neither a function nor a plain configured object;
 - `apiVersion` is unsupported;
-- `setup` is not a function;
+- a configured object's `run` is not a function;
 - width or height is not a positive finite integer;
 - exactly one of width or height is supplied rather than both or neither;
 - background is not a string;
@@ -812,7 +813,7 @@ properties, symbol keys, inherited configuration, and proxies that violate
 reflective invariants are rejected. Validation reads property descriptors before
 values so a getter cannot run merely because the CLI is inspecting a scene. The
 runner snapshots validated scalar configuration and deeply clones/freezes JSON
-metadata and params before setup; mutation of the caller's objects cannot change
+metadata and params before `run`; mutation of the caller's objects cannot change
 an active job.
 
 ### 9.7 Configuration precedence
@@ -913,23 +914,26 @@ capability sandbox. Scene modules can still import Node filesystem/network APIs.
 ### 11.1 Primary command
 
 ```text
-ptsjs render <source> [--out <destination>] [options]
+npx pts-cli <source> [--out <destination>] [options]
+ptsjs <source> [--out <destination>] [options]
+ptsjs render <source> [--out <destination>] [options]  # explicit alias
 ```
 
 Examples:
 
 ```sh
-ptsjs render scene.mjs --out artwork.png
-ptsjs render scene.mjs --out artwork.svg --text-mode outline
-ptsjs render scene.mjs --out artwork.png --out artwork.svg
-ptsjs render scene.mjs --frame 120 --fps 60 --seed launch --out frame.png
-ptsjs render ../pts/demo/circle.intersectCircle2D.js \
+ptsjs scene.mjs --out artwork.png
+ptsjs scene.mjs --out artwork.svg --text-mode outline
+ptsjs scene.mjs --out artwork.png --out artwork.svg
+ptsjs scene.mjs --frame 120 --fps 60 --seed launch --out frame.png
+ptsjs ../pts/demo/circle.intersectCircle2D.js \
   --loader pts-demo --size 640x360 --pointer 320,180 --out circle.svg
 ```
 
-`render` is the only required first-release subcommand. Reserve a subcommand
-grammar so `inspect`, `doctor`, and future sequence rendering can be added
-without changing `render`.
+Rendering is the only first-release operation, so a source path is the primary
+form. `render` remains an explicit alias for scripts that prefer a subcommand.
+Future named operations such as `inspect` or `doctor` can reserve their names; a
+same-named local file remains addressable with an explicit relative path.
 
 ### 11.2 Core options
 
@@ -938,8 +942,8 @@ without changing `render`.
 | `-o, --out <path>`                 | Exact file or trailing-`/` directory; repeatable; `-` means binary/text stdout |
 | `--format <name>`                  | Format for one explicit or generated destination                               |
 | `--loader <auto\|scene\|pts-demo>` | Source interpretation; deterministic override for auto-detection               |
-| `--size <width>x<height>`          | Override logical scene dimensions                                              |
-| `--background <color>`             | Override scene or quickStart background                                        |
+| `--size <width>x<height>`          | Override file dimensions; otherwise use file values or `800x600`               |
+| `--background <color>`             | Override file or quickStart background; otherwise use transparent              |
 | `--pointer <x>,<y>`                | Set pointer state before rendering                                             |
 | `--time <ms>`                      | Invoke exactly one direct frame at this timestamp                              |
 | `--frame <index>`                  | Simulate frames 0 through this index, inclusive                                |
@@ -954,7 +958,7 @@ without changing `render`.
 | `--text-mode <preserve\|outline>`  | SVG text behavior                                                              |
 | `--asset-root <path>`              | Filesystem root used for legacy root-relative asset paths                      |
 | `--allow-net`                      | Permit HTTP(S) through the provided asset service                              |
-| `--font <family=path>`             | Register a font before scene setup; repeatable                                 |
+| `--font <family=path>`             | Register a font before render code runs; repeatable                            |
 | `--renderer <auto\|cpu\|gpu>`      | Skia rendering preference                                                      |
 | `--timeout <ms>`                   | Terminate a render worker after a deadline                                     |
 | `--limit <name=value>`             | Override one documented resource ceiling; repeatable                           |
@@ -999,7 +1003,7 @@ there is no universal frame rate. `--time` and `--frame` are mutually exclusive.
 `--fps` without `--frame` is an error.
 
 Time is a finite non-negative number. Frame is a non-negative safe integer, and
-fps is finite and greater than zero; resource ceilings apply before setup. The
+fps is finite and greater than zero; resource ceilings apply before `run`. The
 scheduler computes each timestamp from its integer index rather than repeatedly
 adding delta, avoiding accumulated floating-point drift. The callback delta is
 zero for index 0 and exactly `1000 / fps` thereafter.
@@ -1360,7 +1364,8 @@ The normalized runner follows this order:
 3. Select the source loader without executing scene code twice.
 4. Apply the requested random seed before module/classic-script evaluation.
 5. Ask the loader for a normalized `LoadedScene`:
-   - the portable loader imports and validates the default scene object;
+   - the portable loader imports and validates the default function or
+     configured object;
    - the classic loader parses source and returns an evaluator without running
      it yet.
 6. Resolve size/background precedence. Classic background may still be pending
@@ -1372,7 +1377,7 @@ The normalized runner follows this order:
 9. Set the initial pointer before registering players.
 10. Create the exact-Pts scene context and asset service from the loaded
     source/base configuration.
-11. Await portable setup or execute the classic evaluator exactly once. A
+11. Await portable `run` or execute the classic evaluator exactly once. A
     classic quickStart/setup background is applied and the space cleared before
     that script registers its first player, unless the CLI override wins.
 12. Await tracked asset promises and capture resulting metadata such as
@@ -1395,10 +1400,10 @@ The normalized runner follows this order:
 21. Return artifact metadata to the parent.
 22. Atomically commit output files or materialize requested in-memory Buffers.
 
-The loader boundary therefore normalizes _execution_, not merely a setup
-function. This is important because a classic script expects quickStart and
-`new CanvasSpace(...)` to produce the already selected root space while the
-script is evaluating.
+The loader boundary therefore normalizes _execution_, not merely an
+initialization function. This is important because a classic script expects
+quickStart and `new CanvasSpace(...)` to produce the already selected root space
+while the script is evaluating.
 
 Initialization snapshots player keys at the beginning of each pass. A removed
 player is skipped before its callback. Players added by an initial resize/start
@@ -1513,8 +1518,9 @@ With `--seed`:
 
 1. retain the requested string and compute the reviewed Pts effective key by
    applying its exact trim-then-control-character-removal behavior;
-2. call the latest Pts `Num.seed(requestedSeed)` before setup;
-3. install a seeded `Math.random` in the isolated CLI worker before scene setup;
+2. call the latest Pts `Num.seed(requestedSeed)` before `run`;
+3. install a seeded `Math.random` in the isolated CLI worker before render code
+   runs;
 4. inject a deterministically derived seeded Math stream into the legacy VM
    context;
 5. report requested/effective seed plus algorithm version in result metadata;
@@ -1579,7 +1585,7 @@ APIs. Importing a scene executes arbitrary Node code.
 Explicit invocation is always available:
 
 ```sh
-ptsjs render demo.js --loader pts-demo --out demo.png
+ptsjs demo.js --loader pts-demo --out demo.png
 ```
 
 `--loader auto` may select `pts-demo` only when a non-executing source preflight
@@ -2062,10 +2068,11 @@ committed paths; an in-progress filesystem syscall itself is not preemptible.
 - ESM `.mjs` scene;
 - package-typed `.js` scene;
 - CommonJS scene;
-- async setup and cleanup;
+- direct-function and configured-object files;
+- async `run` and cleanup;
 - scene-relative import and assets;
 - source path containing spaces and Unicode;
-- top-level and setup failures;
+- top-level and `run` failures;
 - console output capture;
 - timeout and cancellation;
 - returned output buffers and file outputs;
@@ -2074,9 +2081,10 @@ committed paths; an in-progress filesystem syscall itself is not preemptible.
 Browser-entry integration tests additionally cover:
 
 - bundling `pts-cli/browser` with no Node built-in or Skia module in the graph;
-- the exact same scene object in browser CanvasSpace and Node SkiaCanvasSpace;
+- the exact same function or configured object in browser CanvasSpace and Node
+  SkiaCanvasSpace;
 - fixed and responsive size precedence;
-- synchronous and async setup on both sides of the CanvasSpace ready event;
+- synchronous and async `run` on both sides of the CanvasSpace ready event;
 - exactly-once resize/start initialization;
 - mouse/touch binding ownership;
 - browser image/font assets and scene-relative URL behavior;
@@ -2273,17 +2281,17 @@ SVG with deterministic pointer/time.
 
 1. Implement the versioned scene validator.
 2. Implement ESM/CJS loading.
-3. Implement async setup/cleanup and the asset service foundation.
+3. Implement async `run`/cleanup and the asset service foundation.
 4. Implement direct and simulated clocks.
 5. Implement option precedence, seed, params, and result metadata.
 6. Add the optional browser-safe `defineScene` entry point only if dependency
    isolation is provable.
 7. Implement and browser-test the Skia-free `mountScene` entry point, including
-   its instance-local registration gate and async setup versus CanvasSpace-ready
+   its instance-local registration gate and async `run` versus CanvasSpace-ready
    ordering.
 8. Convert `basic-card.mjs` into the canonical portable example.
 
-Gate: one scene module is renderable unchanged by the documented browser mount
+Gate: one render file is renderable unchanged by the documented browser mount
 helper and `renderScene`.
 
 ### Phase 3: CLI and worker
@@ -2386,7 +2394,7 @@ make agent documentation ambiguous. It can be revisited from real usage data.
 | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | revamp moves faster than the adapter lock                           | exact required manifest job, explicit upgrade review, separate advisory revamp-HEAD drift job |
 | compatibility facade silently diverges from quickStart              | lifecycle tests against unchanged demos and reviewed `_script.ts`                             |
-| async browser setup crosses CanvasSpace ready                       | instance-local registration gate plus browser/Node lifecycle trace tests                      |
+| async browser `run` crosses CanvasSpace ready                       | instance-local registration gate plus browser/Node lifecycle trace tests                      |
 | direct timestamp gives wrong stateful output                        | separate direct and simulated command modes                                                   |
 | pointer demos look empty or misleading                              | center default, explicit pointer metadata, per-demo fixtures                                  |
 | synthetic action looks right but exposes the wrong pointer state    | lock latest callback-before-pointer-update order in reference traces                          |
@@ -2410,8 +2418,8 @@ The first CLI milestone is complete only when:
 1. this repository targets the latest explicitly reviewed Pts revamp commit;
 2. the Pts repository has no task-introduced delta from its recorded initial
    HEAD/status/diff fingerprint;
-3. Both `ptsjs render scene.mjs` and `ptsjs render scene.mjs --out art.png` work
-   from a packed install;
+3. `npx pts-cli scene.mjs`, `ptsjs scene.mjs`, and the explicit
+   `ptsjs render scene.mjs` alias work from a packed install;
 4. the same portable scene is mounted by `pts-cli/browser` without source
    changes or a Skia dependency in its browser bundle;
 5. PNG and SVG export through the public adapter and CLI;

@@ -46,7 +46,7 @@ export type PtsSceneImage = CanvasImageSource & {
 };
 
 export interface PtsSceneAssets {
-  /** Resolve relative to the scene module rather than process.cwd(). */
+  /** Resolve relative to the render file rather than process.cwd(). */
   resolve(specifier: string | URL): URL;
 
   /** Load an image for the current CanvasForm backend. */
@@ -69,6 +69,11 @@ export interface PtsSceneContext {
   readonly signal: AbortSignal;
 }
 
+/** Entry point called once by a Node or browser host to register Pts players. */
+export type PtsSceneRun = (
+  context: PtsSceneContext,
+) => Awaitable<void | SceneCleanup>;
+
 interface PtsSceneDefinition {
   /** Portable scene schema version. Omitted means version 1. */
   readonly apiVersion?: 1;
@@ -77,7 +82,7 @@ interface PtsSceneDefinition {
   readonly metadata?: Readonly<Record<string, JsonValue>>;
   readonly background?: string;
   readonly assetBaseURL?: string | URL;
-  readonly setup: (context: PtsSceneContext) => Awaitable<void | SceneCleanup>;
+  readonly run: PtsSceneRun;
 }
 
 type PtsSceneDimensions =
@@ -86,6 +91,9 @@ type PtsSceneDimensions =
 
 /** A portable scene with either both logical dimensions or neither. */
 export type PtsScene = PtsSceneDefinition & PtsSceneDimensions;
+
+/** A render file may export a run function directly or a configured scene. */
+export type PtsSceneSource = PtsScene | PtsSceneRun;
 
 export interface RenderWarning {
   readonly code: string;

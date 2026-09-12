@@ -6,7 +6,7 @@ export default {
   background: "#10131a",
   assetBaseURL: import.meta.url,
 
-  setup({ Pts, space, form }) {
+  run({ Pts, space, form }) {
     const { Circle, Pt } = Pts;
 
     space.add((_time, _delta, current) => {

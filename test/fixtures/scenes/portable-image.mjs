@@ -4,7 +4,7 @@ export default {
   background: "#000000",
   assetBaseURL: import.meta.url,
 
-  async setup({ space, form, assets }) {
+  async run({ space, form, assets }) {
     const image = await assets.image("../assets/square.svg");
     space.add(() =>
       form.image(

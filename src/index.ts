@@ -23,13 +23,17 @@ export type {
   PtsSceneContext,
   PtsSceneForm,
   PtsSceneImage,
+  PtsSceneRun,
+  PtsSceneSource,
   PtsSceneSpace,
   RenderWarning,
   SceneCleanup,
   ScenePoint,
 } from "./scene.js";
 export {
+  DEFAULT_RENDER_BACKGROUND,
   DEFAULT_RENDER_RESOURCE_LIMITS,
+  DEFAULT_RENDER_SIZE,
   type PtsSceneEvent,
   type PtsScenePointerEvent,
   type PtsSceneResizeEvent,

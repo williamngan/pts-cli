@@ -8,9 +8,9 @@ import {
 import * as Pts from "pts";
 
 import type {
-  PtsScene,
   PtsSceneAssets,
   PtsSceneImage,
+  PtsSceneSource,
   RenderWarning,
   SceneCleanup,
 } from "./scene.js";
@@ -519,7 +519,7 @@ async function initializePlayers(
 }
 
 export async function mountScene(
-  sceneValue: PtsScene,
+  sceneValue: PtsSceneSource,
   options: MountSceneOptions,
 ): Promise<MountedScene> {
   const scene = validateScene(sceneValue);
@@ -612,7 +612,7 @@ export async function mountScene(
     const form = space.getForm();
 
     await initializePlayers(space, async () => {
-      const result = await scene.setup({
+      const result = await scene.run({
         Pts,
         space,
         form,
@@ -621,9 +621,7 @@ export async function mountScene(
         signal: controller.signal,
       });
       if (result !== undefined && typeof result !== "function") {
-        throw new TypeError(
-          "scene.setup must return undefined or a cleanup function",
-        );
+        throw new TypeError("run must return undefined or a cleanup function");
       }
       if (typeof result === "function") cleanup = result;
       await assets?.settle();

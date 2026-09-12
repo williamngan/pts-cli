@@ -34,7 +34,7 @@ describe("source loader analysis", () => {
     const source = `
       // Pts.quickStart("#pt")
       const message = "window.demoDescription = new CanvasSpace()";
-      export default { setup() {}, message, "Pts.quickStart": true };
+      export default { run() {}, message, "Pts.quickStart": true };
     `;
 
     expect(selectAutomaticLoader(source, "portable.mjs")).toBe("scene");
@@ -65,13 +65,13 @@ describe("source loader analysis", () => {
 
   it("recognizes CommonJS scenes and rejects genuinely ambiguous sources", () => {
     expect(
-      selectAutomaticLoader(`module.exports = { setup() {} };`, "portable.cjs"),
+      selectAutomaticLoader(`module.exports = { run() {} };`, "portable.cjs"),
     ).toBe("scene");
 
     expect(() =>
       selectAutomaticLoader(
         `
-          export default { setup() {} };
+          export default { run() {} };
           Pts.quickStart("#pt");
         `,
         "ambiguous.mjs",

@@ -1,5 +1,5 @@
 export default {
-  setup() {
+  run() {
     throw new TypeError("fixture scene exploded");
   },
 };

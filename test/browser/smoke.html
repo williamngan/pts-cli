@@ -11,7 +11,8 @@
       }
     </script>
     <style>
-      #pt {
+      #pt,
+      #pt-function {
         width: 64px;
         height: 40px;
       }
@@ -19,6 +20,7 @@
   </head>
   <body>
     <div id="pt"></div>
+    <div id="pt-function"></div>
     <output id="result">pending</output>
     <script type="module">
       import * as Pts from "pts";
@@ -32,7 +34,7 @@
         width: 64,
         height: 40,
         background: "#010203",
-        async setup({ Pts: contextPts, space, form, params, assets }) {
+        async run({ Pts: contextPts, space, form, params, assets }) {
           if (contextPts !== Pts) throw new Error("Pts namespace mismatch");
           if (!(space instanceof Pts.CanvasSpace)) {
             throw new Error("space is not a CanvasSpace");
@@ -173,6 +175,26 @@
         await mounted.dispose();
         await mounted.dispose();
         if (cleanupCalls !== 1) throw new Error("cleanup was not idempotent");
+
+        let directRunCalls = 0;
+        const functionMounted = await mountScene(
+          function run({ space }) {
+            directRunCalls += 1;
+            space.add(() => {});
+          },
+          {
+            target: "#pt-function",
+            resize: false,
+            retina: false,
+            autoplay: false,
+            bindMouse: false,
+            bindTouch: false,
+          },
+        );
+        if (directRunCalls !== 1) {
+          throw new Error("default-exported run function was not called once");
+        }
+        await functionMounted.dispose();
 
         document.body.dataset.status = "passed";
         document.querySelector("#result").textContent = "browser smoke passed";

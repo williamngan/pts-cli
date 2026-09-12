@@ -16,5 +16,5 @@ const output: Promise<string> = space.toURL("jpeg", {
 void output;
 void typedSpace;
 
-const scene = sceneHelpers.defineScene({ setup() {} });
+const scene = sceneHelpers.defineScene({ run() {} });
 void scene;

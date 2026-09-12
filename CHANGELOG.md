@@ -4,19 +4,19 @@
 
 ### Added
 
-- `ptsjs render` CLI with stable JSON records, exit codes, stdout output,
-  multiple formats, no-clobber commits, hard timeouts, signals, and resource
-  limits.
+- `npx pts-cli <source>` and `ptsjs <source>` CLI forms, with an explicit
+  `render` alias, stable JSON records, exit codes, stdout output, multiple
+  formats, no-clobber commits, hard timeouts, signals, and resource limits.
 - Collision-safe default PNG destinations with source-derived names, UUID render
   IDs, explicit trailing-slash directory targets, and format-selectable
   generated outputs.
 - Canonical output-path collision checks and explicit rejection of destination
   directories, symlinks, and other non-regular files, including with `--force`.
 - Worker-isolated `renderScene()` API with path and Buffer outputs.
-- Versioned portable scene contract plus browser-safe `defineScene` and
-  `mountScene` entry points.
-- Syntax-aware automatic selection between portable modules and classic Pts
-  demos.
+- Portable render files with a default-exported `run` function, an optional
+  configured-object form, and browser-safe `defineScene` and `mountScene` entry
+  points.
+- Syntax-aware automatic selection between portable files and classic Pts demos.
 - Private classic-demo VM with `Pts.quickStart`, direct CanvasSpace support,
   lifecycle compatibility, completion-thenable handling, and explicit
   browser-only failure boundaries.
@@ -41,6 +41,8 @@
 ### Changed
 
 - Package and repository identity are now `pts-cli`.
+- Logical dimensions are optional, default to `800x600`, and remain overridable
+  through `--size` or the programmatic `size` option.
 - skia-canvas is a normal exact runtime dependency. Pts remains the single
   unbundled revamp peer.
 - `SkiaCanvasSpace` now supports deterministic pointer/actions, runner-owned

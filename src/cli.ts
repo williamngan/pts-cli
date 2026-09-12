@@ -11,7 +11,8 @@ const HELP = `Pts CLI ${VERSION}
 Render portable scenes and compatible classic Pts demos to images and SVG.
 
 Usage:
-  ptsjs render <source> [--out <destination>] [options]
+  ptsjs <source> [--out <destination>] [options]
+  ptsjs render <source> [--out <destination>] [options]  (explicit form)
   ptsjs --help
   ptsjs --version
 
@@ -27,17 +28,17 @@ Output:
   --text-mode <preserve|outline>   SVG text behavior
   --force                          Replace existing output files
 
-Scene and rendering:
+Code and rendering:
   --loader <auto|scene|pts-demo>   Source loader (default: auto)
-  --size <width>x<height>          Override logical dimensions
-  --background <color>             Override scene background
+  --size <width>x<height>          Canvas size (default: file or 800x600)
+  --background <color>             Canvas background (default: file or transparent)
   --pointer <x>,<y>                Initial pointer state
   --time <ms>                      Render one direct frame (default: 0)
   --frame <index>                  Simulate frames 0 through index
   --fps <number>                   Simulation rate (default: 60)
   --events <file.json>             Replay pointer/action/resize events
   --seed <string>                  Seed Pts and worker Math.random
-  --params <file.json>             Base scene parameters
+  --params <file.json>             Base render parameters
   --param <key=value>              Override a parameter; repeatable
   --asset-root <path|URL>          Base for relative scene assets
   --allow-net                      Permit network asset loading

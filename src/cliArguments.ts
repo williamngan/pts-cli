@@ -491,14 +491,13 @@ export async function parseCLIArguments(
   if (raw.booleans.has("help") || argv.length === 0) return { command: "help" };
   if (raw.booleans.has("version")) return { command: "version" };
 
-  if (raw.positionals[0] !== "render") {
-    usage('Expected the "render" subcommand');
-  }
-  if (raw.positionals.length !== 2 || !raw.positionals[1]) {
-    usage("Usage: ptsjs render <source> [--out <destination>]");
+  const explicitRender = raw.positionals[0] === "render";
+  const source = explicitRender ? raw.positionals[1] : raw.positionals[0];
+  const expectedPositionals = explicitRender ? 2 : 1;
+  if (raw.positionals.length !== expectedPositionals || !source) {
+    usage("Usage: ptsjs <source> [--out <destination>]");
   }
 
-  const source = raw.positionals[1];
   const renderId = randomUUID();
   const limits = parseLimits(raw);
   const effectiveLimits = { ...DEFAULT_RENDER_RESOURCE_LIMITS, ...limits };

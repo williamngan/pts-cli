@@ -11,7 +11,7 @@ describe("structured render errors", () => {
     const original = new PtsRenderError(
       "SCENE_FAILED",
       "setup",
-      "Scene setup failed",
+      "Render function failed",
       { cause: new TypeError("fixture exploded") },
     );
 

@@ -1,7 +1,7 @@
 export default {
   width: 120,
   height: 40,
-  setup({ space, form }) {
+  run({ space, form }) {
     space.add(() => {
       form
         .fillOnly("#123456")

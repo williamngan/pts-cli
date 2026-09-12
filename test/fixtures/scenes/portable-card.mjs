@@ -6,9 +6,9 @@ export default {
   background: "#10131a",
   metadata: { fixture: true },
 
-  setup({ Pts, space, form, params }) {
+  run({ Pts, space, form, params }) {
     const { Circle } = Pts;
-    console.log("portable-card setup");
+    console.log("portable-card run");
 
     space.add({
       animate(time) {

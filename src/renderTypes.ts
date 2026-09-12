@@ -191,6 +191,15 @@ export interface RenderSceneResult {
   readonly durationMs: number;
 }
 
+/** Logical CLI canvas used when neither the caller nor the file sets a size. */
+export const DEFAULT_RENDER_SIZE = Object.freeze({
+  width: 800,
+  height: 600,
+} as const);
+
+/** Canvas clear color used when neither the caller nor the file sets one. */
+export const DEFAULT_RENDER_BACKGROUND = "transparent";
+
 export const DEFAULT_RENDER_RESOURCE_LIMITS: Readonly<RenderResourceLimits> =
   Object.freeze({
     maxWidth: 16_384,

@@ -1,2 +1,2 @@
-export default { setup() {} };
+export default { run() {} };
 Pts.quickStart("#pt");

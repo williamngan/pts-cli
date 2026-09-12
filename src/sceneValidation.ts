@@ -9,7 +9,7 @@ const sceneKeys = new Set([
   "height",
   "background",
   "assetBaseURL",
-  "setup",
+  "run",
 ]);
 const forbiddenJsonKeys = new Set(["__proto__", "constructor", "prototype"]);
 
@@ -163,6 +163,10 @@ export function snapshotJsonObject(
 }
 
 export function validateScene(value: unknown, path = "scene"): PtsScene {
+  if (typeof value === "function") {
+    return Object.freeze({ run: value }) as PtsScene;
+  }
+
   const descriptors = plainObjectDescriptors(value, path);
   for (const key of Object.keys(descriptors)) {
     if (!sceneKeys.has(key)) fail(path + "." + key, "is not a supported key");
@@ -175,7 +179,7 @@ export function validateScene(value: unknown, path = "scene"): PtsScene {
   const width = descriptorValue(descriptors, "width");
   const height = descriptorValue(descriptors, "height");
   const assetBaseURL = descriptorValue(descriptors, "assetBaseURL");
-  const setup = descriptorValue(descriptors, "setup");
+  const run = descriptorValue(descriptors, "run");
   const metadata = descriptorValue(descriptors, "metadata");
 
   if (apiVersion !== undefined && apiVersion !== 1) {
@@ -204,8 +208,8 @@ export function validateScene(value: unknown, path = "scene"): PtsScene {
       fail(path + ".assetBaseURL", "must be a valid URL reference");
     }
   }
-  if (typeof setup !== "function") {
-    fail(path + ".setup", "must be a function");
+  if (typeof run !== "function") {
+    fail(path + ".run", "must be a function");
   }
   const normalized: Record<string, unknown> = {};
   for (const key of Object.keys(descriptors)) {

@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Render Pts.js scenes from the command line."
+      content="Render Pts.js to images and SVG from the command line."
     />
     <meta name="theme-color" content="#10283a" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Pts CLI" />
     <meta
       property="og:description"
-      content="Render Pts.js scenes from the command line."
+      content="Render Pts.js to images and SVG from the command line."
     />
     <title>Pts CLI</title>
     <link rel="icon" href="data:," />
@@ -194,7 +194,7 @@
 
       .start-grid {
         display: grid;
-        align-items: stretch;
+        align-items: center;
         gap: 22px;
         grid-template-columns: minmax(0, 1.16fr) minmax(360px, 0.84fr);
         margin-top: 52px;
@@ -493,7 +493,7 @@
           gap: 18px;
         }
 
-        .nav a[href="#scene"] {
+        .nav a[href="#code"] {
           display: none;
         }
 
@@ -578,7 +578,7 @@
           <strong>Pts.</strong>
           <span>CLI</span>
         </a>
-        <a href="#scene">Scene</a>
+        <a href="#code">Code</a>
         <a href="https://github.com/williamngan/pts-cli#readme">README</a>
         <a href="https://github.com/williamngan/pts-cli">GitHub</a>
       </nav>
@@ -595,24 +595,21 @@
           <div class="start-grid">
             <article class="terminal">
               <div class="panel-head">
-                <span>Install and render</span>
+                <span>Render a file</span>
                 <button
                   class="copy-button"
                   type="button"
                   data-copy-target="startCode"
-                  aria-label="Copy setup commands"
+                  aria-label="Copy render command"
                 >
                   Copy
                 </button>
               </div>
               <pre
                 tabindex="0"
-              ><code id="startCode"><span class="prompt">$</span> git clone https://github.com/williamngan/pts-cli.git
-<span class="prompt">$</span> cd pts-cli
-<span class="prompt">$</span> pnpm install &amp;&amp; pnpm build
-<span class="prompt">$</span> node dist/cli.mjs render examples/basic-card.mjs
+              ><code id="startCode"><span class="prompt">$</span> npx pts-cli circle.mjs
 
-<span class="output-path">pts-output/basic-card-&lt;render-id&gt;.png</span></code></pre>
+<span class="output-path">pts-output/circle-&lt;render-id&gt;.png</span></code></pre>
             </article>
 
             <figure class="output-preview">
@@ -662,19 +659,18 @@
                   Pts CLI
                 </text>
               </svg>
-              <figcaption>Rendered from a Pts scene.</figcaption>
+              <figcaption>Output from the command above.</figcaption>
             </figure>
           </div>
         </div>
       </section>
 
-      <section class="section" id="scene">
+      <section class="section" id="code">
         <div class="container">
           <div class="section-heading">
-            <h2>Portable scene module</h2>
+            <h2>Write a JavaScript file</h2>
             <p>
-              Export a scene object with ordinary Pts drawing code. The same
-              module can also mount in a browser.
+              Export one function and use ordinary Pts drawing code inside it.
             </p>
           </div>
 
@@ -686,7 +682,7 @@
                   class="copy-button"
                   type="button"
                   data-copy-target="sceneCode"
-                  aria-label="Copy portable scene"
+                  aria-label="Copy JavaScript example"
                 >
                   Copy
                 </button>
@@ -694,27 +690,20 @@
               <pre
                 class="source-code"
                 tabindex="0"
-              ><code id="sceneCode"><span class="tok-key">export default</span> {
-  apiVersion: <span class="tok-number">1</span>,
-  width: <span class="tok-number">640</span>,
-  height: <span class="tok-number">360</span>,
-  background: <span class="tok-string">"#10283a"</span>,
+              ><code id="sceneCode"><span class="tok-key">export default function</span> <span class="tok-function">run</span>({ Pts, space, form }) {
+  <span class="tok-key">const</span> { Circle } = Pts;
 
-  <span class="tok-function">setup</span>({ Pts, space, form }) {
-    <span class="tok-key">const</span> { Circle } = Pts;
-
-    space.<span class="tok-function">add</span>(() =&gt; {
-      form
-        .<span class="tok-function">fillOnly</span>(<span class="tok-string">"#7566ff"</span>)
-        .<span class="tok-function">circle</span>(
-          Circle.<span class="tok-function">fromCenter</span>(
-            space.pointer,
-            <span class="tok-number">48</span>
-          )
-        );
-    });
-  }
-};</code></pre>
+  space.<span class="tok-function">add</span>(() =&gt; {
+    form
+      .<span class="tok-function">fillOnly</span>(<span class="tok-string">"#7566ff"</span>)
+      .<span class="tok-function">circle</span>(
+        Circle.<span class="tok-function">fromCenter</span>(
+          space.pointer,
+          <span class="tok-number">48</span>
+        )
+      );
+  });
+}</code></pre>
             </article>
 
             <div class="scene-usage">
@@ -723,22 +712,30 @@
                 <pre
                   class="usage-code"
                   tabindex="0"
-                ><code>ptsjs render circle.mjs \
+                ><code>npx pts-cli circle.mjs \
   --out circle.png \
-  --out circle.svg</code></pre>
-                <p>Both files come from the same final canvas.</p>
+  --out circle.svg
+
+npx pts-cli circle.mjs \
+  --size 1200x630 \
+  --background "#10283a" \
+  --out card.png</code></pre>
+                <p>
+                  Size and background are optional. They default to 800 × 600
+                  and transparent.
+                </p>
               </article>
 
               <article class="usage-block">
-                <h3>Mount it in a browser</h3>
+                <h3>Use the same file in a browser</h3>
                 <pre
                   class="usage-code"
                   tabindex="0"
                 ><code><span class="tok-key">import</span> { mountScene } <span class="tok-key">from</span>
   <span class="tok-string">"pts-cli/browser"</span>;
-<span class="tok-key">import</span> scene <span class="tok-key">from</span> <span class="tok-string">"./circle.mjs"</span>;
+<span class="tok-key">import</span> run <span class="tok-key">from</span> <span class="tok-string">"./circle.mjs"</span>;
 
-<span class="tok-key">await</span> <span class="tok-function">mountScene</span>(scene, {
+<span class="tok-key">await</span> <span class="tok-function">mountScene</span>(run, {
   target: <span class="tok-string">"#pt"</span>
 });</code></pre>
               </article>

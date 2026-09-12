@@ -17,10 +17,12 @@ import { SkiaCanvasError } from "./errors.js";
 import { NodeSceneAssets } from "./NodeSceneAssets.js";
 import { PtsRenderError } from "./PtsRenderError.js";
 import { applyRandomSeed } from "./random.js";
-import type {
-  PtsSceneEvent,
-  RenderOutputRequest,
-  RuntimeFacts,
+import {
+  DEFAULT_RENDER_BACKGROUND,
+  DEFAULT_RENDER_SIZE,
+  type PtsSceneEvent,
+  type RenderOutputRequest,
+  type RuntimeFacts,
 } from "./renderTypes.js";
 import type {
   JsonValue,
@@ -94,7 +96,7 @@ async function preflightPortableSource(source: string): Promise<void> {
     throw new PtsRenderError(
       "SOURCE_NOT_FOUND",
       "load",
-      "Unable to read scene module: " + source,
+      "Unable to read render file: " + source,
       { cause: error, details: { source } },
     );
   }
@@ -154,7 +156,7 @@ async function loadPortableScene(source: string): Promise<PtsScene> {
     throw new PtsRenderError(
       "SCENE_FAILED",
       "load",
-      "Scene module failed while loading: " + source,
+      "Render file failed while loading: " + source,
       { cause: error, details: { source } },
     );
   }
@@ -163,7 +165,7 @@ async function loadPortableScene(source: string): Promise<PtsScene> {
     throw new PtsRenderError(
       "SCENE_INVALID",
       "validate",
-      "Scene module must provide a default export",
+      "Render file must provide a default export",
       { details: { source } },
     );
   }
@@ -171,7 +173,7 @@ async function loadPortableScene(source: string): Promise<PtsScene> {
   if (
     candidate !== null &&
     typeof candidate === "object" &&
-    typeof (candidate as { setup?: unknown }).setup !== "function" &&
+    typeof (candidate as { run?: unknown }).run !== "function" &&
     "default" in candidate
   ) {
     candidate = (candidate as { default?: unknown }).default;
@@ -182,7 +184,7 @@ async function loadPortableScene(source: string): Promise<PtsScene> {
     throw new PtsRenderError(
       "SCENE_INVALID",
       "validate",
-      error instanceof Error ? error.message : "Scene module is invalid",
+      error instanceof Error ? error.message : "Render file is invalid",
       { cause: error, details: { source } },
     );
   }
@@ -522,9 +524,11 @@ export async function runWorkerJob(
           PtsScene["metadata"]
         >);
 
-  const width = job.size?.width ?? scene?.width ?? 800;
-  const height = job.size?.height ?? scene?.height ?? 600;
-  const background = job.background ?? scene?.background ?? "transparent";
+  const width = job.size?.width ?? scene?.width ?? DEFAULT_RENDER_SIZE.width;
+  const height =
+    job.size?.height ?? scene?.height ?? DEFAULT_RENDER_SIZE.height;
+  const background =
+    job.background ?? scene?.background ?? DEFAULT_RENDER_BACKGROUND;
   validateLogicalSize(width, height, job);
   const abortController = new AbortController();
   const space = createRenderSpace(width, height, job, background);
@@ -572,9 +576,9 @@ export async function runWorkerJob(
     }
 
     if (scene) {
-      let setupResult: void | SceneCleanup;
+      let runResult: void | SceneCleanup;
       try {
-        setupResult = await scene.setup({
+        runResult = await scene.run({
           Pts,
           space,
           form,
@@ -586,21 +590,21 @@ export async function runWorkerJob(
         throw new PtsRenderError(
           "SCENE_FAILED",
           "setup",
-          "Scene setup failed",
+          "Render function failed",
           {
             cause: error,
             details: { source: job.source },
           },
         );
       }
-      if (setupResult !== undefined && typeof setupResult !== "function") {
+      if (runResult !== undefined && typeof runResult !== "function") {
         throw new PtsRenderError(
           "SCENE_INVALID",
           "setup",
-          "scene.setup must return undefined or a cleanup function",
+          "run must return undefined or a cleanup function",
         );
       }
-      if (typeof setupResult === "function") cleanup = setupResult;
+      if (typeof runResult === "function") cleanup = runResult;
     } else {
       if (loadedClassic === undefined) {
         throw new PtsRenderError(

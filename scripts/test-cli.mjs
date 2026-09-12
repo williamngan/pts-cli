@@ -17,6 +17,7 @@ import { renderScene } from "../dist/index.mjs";
 
 const cli = resolve("dist/cli.mjs");
 const scene = resolve("test/fixtures/scenes/portable-card.mjs");
+const functionScene = resolve("test/fixtures/scenes/portable-function.mjs");
 const hangingScene = resolve("test/fixtures/scenes/hang.mjs");
 const classicScene = resolve("test/fixtures/classic/quick-start.js");
 const ambiguousScene = resolve("test/fixtures/classic/ambiguous.mjs");
@@ -65,13 +66,16 @@ const temporary = await mkdtemp(join(tmpdir(), "pts-cli-integration-"));
 try {
   const help = await run(["--help"]);
   assert(help.code === 0, "--help failed");
-  assert(help.stdout.toString().includes("ptsjs render"), "help is incomplete");
+  assert(
+    help.stdout.toString().includes("ptsjs <source>"),
+    "help is incomplete",
+  );
   assert(
     help.stdout.toString().includes("pts-output/<source>-<uuid>.png"),
     "help omits generated output behavior",
   );
 
-  const generated = await run(["render", scene, "--json"], temporary);
+  const generated = await run([scene, "--json"], temporary);
   assert(generated.code === 0, generated.stderr.toString());
   const generatedRecord = JSON.parse(generated.stdout.toString());
   assert(
@@ -90,6 +94,63 @@ try {
     (await readFile(generatedRecord.outputs[0].path)).readUInt32BE(0) ===
       0x89504e47,
     "generated PNG is invalid",
+  );
+
+  const defaultSize = await run([
+    "render",
+    functionScene,
+    "--out",
+    join(temporary, "default-size.png"),
+    "--json",
+  ]);
+  assert(defaultSize.code === 0, defaultSize.stderr.toString());
+  const defaultSizeRecord = JSON.parse(defaultSize.stdout.toString());
+  assert(
+    defaultSizeRecord.width === 800 && defaultSizeRecord.height === 600,
+    "dimension-free render did not use the 800x600 default",
+  );
+
+  const overriddenSize = await run([
+    "render",
+    scene,
+    "--size",
+    "320x180",
+    "--background",
+    "#10283a",
+    "--out",
+    join(temporary, "overridden-size.png"),
+    "--json",
+  ]);
+  assert(overriddenSize.code === 0, overriddenSize.stderr.toString());
+  const overriddenSizeRecord = JSON.parse(overriddenSize.stdout.toString());
+  assert(
+    overriddenSizeRecord.width === 320 && overriddenSizeRecord.height === 180,
+    "--size did not override the render file dimensions",
+  );
+
+  const overriddenBackground = await run([
+    "render",
+    functionScene,
+    "--size",
+    "4x3",
+    "--background",
+    "#10283a",
+    "--out",
+    "-",
+    "--format",
+    "raw",
+    "--quiet",
+  ]);
+  assert(
+    overriddenBackground.code === 0,
+    overriddenBackground.stderr.toString(),
+  );
+  assert(
+    overriddenBackground.stdout.length === 4 * 3 * 4 &&
+      overriddenBackground.stdout
+        .subarray(0, 4)
+        .equals(Buffer.from([0x10, 0x28, 0x3a, 0xff])),
+    "--background did not override the transparent default",
   );
 
   const generatedSvgDirectory = join(temporary, "generated-svg") + sep;
@@ -387,7 +448,7 @@ try {
   const debugFailureRecord = JSON.parse(debugFailure.stdout.toString());
   assert(debugFailure.code === 4, "debug failure used the wrong exit code");
   assert(
-    debugFailureRecord.error.stack?.includes("Scene setup failed") &&
+    debugFailureRecord.error.stack?.includes("Render function failed") &&
       debugFailureRecord.error.cause?.stack?.includes("fixture scene exploded"),
     "debug JSON omitted worker or cause stacks",
   );
@@ -423,7 +484,7 @@ try {
     "bad SVG file",
   );
   assert(
-    programmatic.logs.stdout.includes("portable-card setup"),
+    programmatic.logs.stdout.includes("portable-card run"),
     "scene log missing",
   );
 } finally {

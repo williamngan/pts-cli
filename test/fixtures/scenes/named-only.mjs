@@ -1,1 +1,1 @@
-export const scene = { setup() {} };
+export const scene = { run() {} };

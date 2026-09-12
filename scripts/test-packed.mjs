@@ -47,7 +47,7 @@ try {
     [
       "export default {",
       "  width: 8, height: 6, background: '#010203',",
-      "  setup({ space, form }) {",
+      "  run({ space, form }) {",
       "    space.add(() => form.fillOnly('#ff0000').point([3, 2], 1, 'square'));",
       "  },",
       "};",
@@ -61,7 +61,7 @@ try {
       'import { Pt } from "pts";',
       "export default {",
       "  width: 8, height: 6,",
-      "  setup({ space, form }) {",
+      "  run({ space, form }) {",
       "    space.add(() => form.fillOnly('#00ff00').point(new Pt(3, 2), 1, 'square'));",
       "  },",
       "};",
@@ -83,7 +83,7 @@ try {
       'import { Pt } from "pts";',
       "export default {",
       "  width: 8, height: 6,",
-      "  setup({ space, form }) {",
+      "  run({ space, form }) {",
       "    space.add(() => form.point(new Pt(1, 1)));",
       "  },",
       "};",
@@ -103,7 +103,7 @@ try {
     `  try { await renderScene(${JSON.stringify(foreignScenePath)}, { outputs: [{ format: "png" }] }); } catch (error) { mismatch = error; }`,
     '  if (mismatch?.code !== "PTS_INSTANCE_MISMATCH") throw new Error("duplicate Pts was not rejected");',
     '  const sceneEntry = await import("pts-cli/scene");',
-    '  if (sceneEntry.defineScene({ setup() {} }).setup === undefined) throw new Error("scene entry mismatch");',
+    '  if (sceneEntry.defineScene({ run() {} }).run === undefined) throw new Error("scene entry mismatch");',
     '  const browserEntry = await import("pts-cli/browser");',
     '  if (typeof browserEntry.mountScene !== "function") throw new Error("browser entry mismatch");',
     "});",
@@ -135,12 +135,12 @@ try {
   const help = await execute(process.execPath, [bin, "--help"], {
     cwd: temporary,
   });
-  if (!help.stdout.includes("ptsjs render")) {
+  if (!help.stdout.includes("ptsjs <source>")) {
     throw new Error("packed ptsjs help mismatch");
   }
   const generated = await execute(
     process.execPath,
-    [bin, "render", scenePath, "--json"],
+    [bin, scenePath, "--json"],
     { cwd: temporary },
   );
   const generatedRecord = JSON.parse(generated.stdout);

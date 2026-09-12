@@ -6,7 +6,8 @@ in Node.js. The package uses
 
 - the `ptsjs` command for agents, scripts, and build pipelines;
 - a deterministic `renderScene()` API;
-- a portable scene format that runs in Node and a normal browser CanvasSpace;
+- a portable JavaScript format that runs in Node and a normal browser
+  CanvasSpace;
 - a compatibility loader for a tested subset of unchanged Pts demos; and
 - the lower-level `SkiaCanvasSpace` and `SkiaCanvasForm` adapter.
 
@@ -43,13 +44,35 @@ browser events, or HTMLSpace meaningful in Node. Its SVG is a recording of
 Canvas drawing commands, not a semantic Pts SVGSpace scene graph. Those cases
 are reported explicitly.
 
-## Development quick start
+## Command line
+
+After npm publication, render a file without installing the package globally:
+
+```sh
+npx pts-cli drawing.mjs
+```
+
+For unattended or reproducible use, suppress npm's install prompt and pin the
+version:
+
+```sh
+npx --yes pts-cli@0.1.0 drawing.mjs --json
+```
+
+The package installs one executable named `ptsjs`, so the persistent form is:
+
+```sh
+npm install --global pts-cli
+ptsjs drawing.mjs
+```
+
+### From this checkout
 
 ```sh
 pnpm install
 pnpm build
 
-node dist/cli.mjs render examples/basic-card.mjs \
+node dist/cli.mjs examples/basic-card.mjs \
   --json
 ```
 
@@ -58,16 +81,10 @@ With no `--out`, this creates a unique PNG such as
 names or generate multiple formats explicitly:
 
 ```sh
-node dist/cli.mjs render examples/basic-card.mjs \
+node dist/cli.mjs examples/basic-card.mjs \
   --out out/basic-card.png \
   --out out/basic-card.svg \
   --json
-```
-
-Once packaged, the same command is:
-
-```sh
-ptsjs render scene.mjs --json
 ```
 
 Output directories are created as needed. Existing files are protected unless
@@ -76,36 +93,30 @@ generate the filename; a directory passed without a trailing slash is treated as
 an exact target and rejected. Symlinks, other non-regular targets, and duplicate
 canonical paths are also rejected before scene execution.
 
-## A portable Pts scene
+## Write a render file
 
-The recommended source format keeps ordinary Pts drawing code and replaces only
-the browser bootstrapping:
+A render file is ordinary JavaScript with one default-exported function. The CLI
+calls `run` once so the file can register its normal Pts drawing callback:
 
 ```js
-export default {
-  apiVersion: 1,
-  width: 640,
-  height: 360,
-  background: "#10131a",
-  assetBaseURL: import.meta.url,
+function run({ Pts, space, form, params }) {
+  const { Circle } = Pts;
+  const radius = Number(params.radius ?? 40);
 
-  setup({ Pts, space, form, params }) {
-    const { Circle } = Pts;
-    const radius = Number(params.radius ?? 40);
+  space.add((time) => {
+    form
+      .fillOnly("#67e8f9")
+      .circle(Circle.fromCenter(space.pointer, radius + time / 1000));
+  });
+}
 
-    space.add((time) => {
-      form
-        .fillOnly("#67e8f9")
-        .circle(Circle.fromCenter(space.pointer, radius + time / 1000));
-    });
-  },
-};
+export default run;
 ```
 
 Render it in Node:
 
 ```sh
-ptsjs render circles.mjs \
+ptsjs circles.mjs \
   --size 640x360 \
   --pointer 320,180 \
   --time 1000 \
@@ -113,13 +124,26 @@ ptsjs render circles.mjs \
   --out circles.png
 ```
 
-Mount the exact same object in a browser:
+The canvas is `800x600` with a transparent background when neither the file nor
+the command specifies them. `--size` and `--background` override file values. To
+keep defaults in the file, export a configured object instead:
+
+```js
+export default {
+  width: 640,
+  height: 360,
+  background: "#10131a",
+  run,
+};
+```
+
+Mount the exact same function or configured object in a browser:
 
 ```js
 import { mountScene } from "pts-cli/browser";
-import scene from "./circles.mjs";
+import run from "./circles.mjs";
 
-const mounted = await mountScene(scene, {
+const mounted = await mountScene(run, {
   target: "#pt",
   params: { radius: 48 },
 });
@@ -138,10 +162,11 @@ binding and playback. It intentionally rejects SVGSpace targets.
 Most drawing and player code can stay unchanged. The meaningful differences are
 at the edges:
 
-| Standard browser demo                         | Portable scene                                    |
+| Standard browser demo                         | Render file                                       |
 | --------------------------------------------- | ------------------------------------------------- |
-| `Pts.quickStart("#pt", bg)`                   | scene `width`, `height`, and `background`         |
-| globals such as `Circle`, `space`, and `form` | destructure `Pts`, `space`, and `form` in `setup` |
+| `Pts.quickStart("#pt", bg)`                   | file or CLI background                            |
+| container determines initial size             | file, `--size`, or the `800x600` default          |
+| globals such as `Circle`, `space`, and `form` | destructure `Pts`, `space`, and `form` in `run`   |
 | `space.bindMouse().bindTouch().play()`        | browser mount or CLI runner owns scheduling/input |
 | browser-relative `Img` or font loading        | `assets.image()` and `assets.font()`              |
 | live browser clock                            | explicit `--time` or `--frame` simulation         |
@@ -156,7 +181,7 @@ worker VM and supplies Pts globals, `Pts.quickStart`, a private CanvasSpace
 facade, deterministic lifecycle methods, and narrowly supported Canvas globals:
 
 ```sh
-ptsjs render path/to/pts/demo/circle.intersectCircle2D.js \
+ptsjs path/to/pts/demo/circle.intersectCircle2D.js \
   --loader auto \
   --size 640x360 \
   --pointer 320,180 \
@@ -188,7 +213,7 @@ Root-relative legacy image paths require an explicit root instead of guessing
 the machine filesystem:
 
 ```sh
-ptsjs render path/to/pts/demo/guide.image_load.js \
+ptsjs path/to/pts/demo/guide.image_load.js \
   --asset-root path/to/pts \
   --out image-demo.png
 ```
@@ -200,6 +225,7 @@ comes from the Canvas recording, not SVGSpace.
 ## CLI
 
 ```text
+ptsjs <source> [--out <destination>] [options]
 ptsjs render <source> [--out <destination>] [options]
 ```
 
@@ -210,8 +236,8 @@ Core options:
 | `-o, --out <path>`                 | Exact file or trailing-`/` directory; repeatable; `-` writes to stdout |
 | `--format <name>`                  | Generated, ambiguous, or stdout format                                 |
 | `--loader <auto\|scene\|pts-demo>` | Source interpretation                                                  |
-| `--size <width>x<height>`          | Logical size override                                                  |
-| `--background <color>`             | Background override                                                    |
+| `--size <width>x<height>`          | Canvas size; overrides file values; otherwise defaults to `800x600`    |
+| `--background <color>`             | Canvas background; overrides file value; otherwise transparent         |
 | `--pointer <x>,<y>`                | Initial pointer without dispatching an action                          |
 | `--time <ms>`                      | One direct frame at a timestamp                                        |
 | `--frame <index> --fps <rate>`     | Simulate frames 0 through the index                                    |
@@ -252,8 +278,8 @@ name should use `--json` when they need to discover it programmatically.
 `--format` selects the generated extension:
 
 ```sh
-ptsjs render scene.mjs --format svg --text-mode outline --json
-ptsjs render scene.mjs --out renders/ --format webp --json
+ptsjs scene.mjs --format svg --text-mode outline --json
+ptsjs scene.mjs --out renders/ --format webp --json
 ```
 
 The second form creates a unique file inside `renders/`. A bare `--out` remains
@@ -265,8 +291,8 @@ Other effective defaults are:
 | Setting                      | Default or fallback                                    |
 | ---------------------------- | ------------------------------------------------------ |
 | loader                       | Syntax-aware `auto` selection                          |
-| logical size                 | Scene dimensions, otherwise `800x600`                  |
-| background                   | Scene/classic-demo background, otherwise transparent   |
+| logical size                 | File dimensions, otherwise `800x600`                   |
+| background                   | File/classic-demo background, otherwise transparent    |
 | pointer                      | Canvas center                                          |
 | clock                        | One direct frame at `0ms` with a zero delta            |
 | simulated frame rate         | `60fps` when `--frame` is selected                     |
@@ -351,9 +377,9 @@ Failures use
 `{ "ok": false, "error": { "code", "phase", "message", "cause"? } }` and retain
 a bounded cause chain without stacks by default. `--debug` adds worker and cause
 stacks. Exit groups are stable: 2 for usage/validation, 3 for source or
-compatibility, 4 for scene setup/input/frame, 5 for export/commit, 6 for
-native/environment, 124 for timeout, and 130 for SIGINT. `--json` cannot be
-combined with `--out -`.
+compatibility, 4 for render-file initialization/input/frame, 5 for
+export/commit, 6 for native/environment, 124 for timeout, and 130 for SIGINT.
+`--json` cannot be combined with `--out -`.
 
 ## Programmatic one-shot API
 
@@ -384,8 +410,9 @@ paths become bounded Buffers in the parent. The result includes dimensions,
 clock facts, random facts, renderer facts, warnings, hashes, captured logs, and
 optional scene metadata.
 
-Portable modules must have a default export. `.mjs`, package-appropriate `.js`,
-and `.cjs` (`module.exports` or `exports.default`) are supported. Direct runtime
+Render files must have a default export containing either a `run` function or a
+configured object with a `run` property. `.mjs`, package-appropriate `.js`, and
+`.cjs` (`module.exports` or `exports.default`) are supported. Direct runtime
 imports from `pts` are allowed only when they resolve to the runner's exact peer
 installation; otherwise rendering fails with `PTS_INSTANCE_MISMATCH`. Using
 `context.Pts` avoids that package-manager edge case.
@@ -397,7 +424,7 @@ Portable code uses one API in Node and the browser:
 ```js
 export default {
   assetBaseURL: import.meta.url,
-  async setup({ space, form, assets }) {
+  async run({ space, form, assets }) {
     const image = await assets.image("./artwork.webp");
     await assets.font({
       family: "Project Sans",
@@ -487,7 +514,7 @@ before native Canvas construction.
 
 ## Trust and resource boundary
 
-Scene modules and classic demos execute arbitrary JavaScript. The worker and VM
+Render files and classic demos execute arbitrary JavaScript. The worker and VM
 improve lifecycle control, diagnostics, and timeout behavior; they are not a
 security sandbox for hostile code. Render only trusted sources, especially when
 network assets are enabled.
