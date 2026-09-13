@@ -15,7 +15,7 @@ Pts itself is never patched. All Node integration lives in this repository.
 
 ## Status
 
-This is the `0.1.0` release for published
+This is the `0.1.1` release for published
 [**Pts 1.0.0**](https://www.npmjs.com/package/pts). Both the npm package and the
 installed command are named `pts-render`.
 
@@ -32,7 +32,7 @@ For unattended or reproducible use, suppress npm's install prompt and pin the
 version:
 
 ```sh
-npx --yes pts-render@0.1.0 drawing.mjs --json
+npx --yes pts-render@0.1.1 drawing.mjs --json
 ```
 
 The package installs one executable named `pts-render`, so the persistent form
@@ -197,7 +197,7 @@ build step, an import map over a local install works:
 ```
 
 A CDN that rewrites dependencies, for example
-`https://esm.sh/pts-render@0.1.0/browser`, also resolves `pts` on its own.
+`https://esm.sh/pts-render@0.1.1/browser`, also resolves `pts` on its own.
 
 `mountScene(scene, options)` accepts:
 

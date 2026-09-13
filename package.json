@@ -1,6 +1,6 @@
 {
   "name": "pts-render",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Render portable and classic Pts scenes to PNG and SVG with a deterministic Node.js CLI and API",
   "license": "Apache-2.0",
   "author": "William Ngan",
