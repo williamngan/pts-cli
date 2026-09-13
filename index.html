@@ -115,7 +115,6 @@
         z-index: 20;
         top: 0;
         height: 66px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.13);
         background: var(--navy);
         color: var(--paper);
       }
@@ -139,7 +138,7 @@
       .brand strong {
         font-size: 31px;
         font-weight: 430;
-        letter-spacing: -0.07em;
+        letter-spacing: -0.03em;
         line-height: 1;
       }
 
@@ -148,7 +147,7 @@
         font-family: var(--mono);
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.03em;
         text-transform: uppercase;
       }
 
@@ -181,7 +180,7 @@
         margin: 0;
         font-size: clamp(54px, 6.4vw, 84px);
         font-weight: 360;
-        letter-spacing: -0.065em;
+        letter-spacing: -0.03em;
         line-height: 1;
       }
 
@@ -208,9 +207,13 @@
       .output-preview,
       .code-panel {
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.2);
         background: var(--navy-dark);
         padding-bottom: 30px;
+        border-radius: 10px;
+      }
+
+      .terminal {
+          border-radius: 30px;
       }
 
       .panel-head {
@@ -280,12 +283,13 @@
       }
 
       .section {
-        padding: 98px 0;
+        padding: 100px 0;
       }
 
       .section-soft {
         border-top: 1px solid var(--line);
         background: var(--soft);
+        padding-top: 80px;
       }
 
       .section-heading {
@@ -298,7 +302,7 @@
         color: var(--navy);
         font-size: clamp(38px, 4.4vw, 56px);
         font-weight: 390;
-        letter-spacing: -0.055em;
+        letter-spacing: -0.03em;
         line-height: 1.05;
       }
 
@@ -311,7 +315,7 @@
       .scene-grid {
         display: grid;
         align-items: stretch;
-        gap: 22px;
+        gap: 36px;
         grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
       }
 
@@ -351,13 +355,11 @@
 
       .scene-usage {
         display: grid;
-        gap: 22px;
+        gap: 20px;
         grid-template-rows: 1fr 1fr;
       }
 
       .usage-block {
-        padding: 24px;
-        border: 1px solid var(--line);
         background: var(--paper);
       }
 
@@ -379,6 +381,7 @@
         color: var(--code-text);
         font-size: 11px;
         line-height: 1.75;
+        border-radius: 10px;
       }
 
       .feature-list {
@@ -445,7 +448,7 @@
         color: var(--paper);
         font-size: 23px;
         font-weight: 430;
-        letter-spacing: -0.05em;
+        letter-spacing: -0.03em;
       }
 
       .footer-links {
@@ -577,8 +580,7 @@
           <strong>Pts.</strong>
           <span>CLI</span>
         </a>
-        <a href="#code">Code</a>
-        <a href="https://github.com/williamngan/pts-cli#readme">README</a>
+        <a href="https://ptsjs.org">Pts.js</a>
         <a href="https://github.com/williamngan/pts-cli">GitHub</a>
       </nav>
     </header>
@@ -587,8 +589,8 @@
       <section class="hero" id="top">
         <div class="hero-inner container">
           <div class="hero-copy">
-            <h1>Render Pts.js from the command line.</h1>
-            <p>Generate images and SVG in Node without running a browser.</p>
+            <h1>Run Pts.js from the command line.</h1>
+            <p>Generate images and SVGs directly without a browser.</p>
           </div>
 
           <div class="start-grid">
@@ -700,13 +702,14 @@
       <section class="section" id="code">
         <div class="container">
           <div class="section-heading">
-            <h2>Write a JavaScript file</h2>
+            <h2>Simple interface</h2>
             <p>
-              Export one function and use ordinary Pts drawing code inside it.
+              Export one function with Pts drawing code, and run `<code>npx pts-cli</code>`.
             </p>
           </div>
 
           <div class="scene-grid">
+            <article class="usage-block"><h3>Pts.js code sample</h3>
             <article class="code-panel">
               <div class="panel-head">
                 <span>interpolate.mjs</span>
@@ -745,19 +748,20 @@
     <span class="tok-function">interpolate</span>(rect, t);
   });
 }</code></pre>
+                </article>
             </article>
 
             <div class="scene-usage">
               <article class="usage-block">
-                <h3>Render it</h3>
+                <h3>Render it from command line</h3>
                 <pre
                   class="usage-code"
                   tabindex="0"
-                ><code>npx pts-cli interpolate.mjs \
+                ><code><span class="prompt">$</span> npx pts-cli interpolate.mjs \
   --out interpolate.png \
   --out interpolate.svg
 
-npx pts-cli interpolate.mjs \
+<span class="prompt">$</span> npx pts-cli interpolate.mjs \
   --size 1200x630 \
   --out card.png</code></pre>
                 <p>
@@ -767,7 +771,7 @@ npx pts-cli interpolate.mjs \
               </article>
 
               <article class="usage-block">
-                <h3>Use the same file in a browser</h3>
+                <h3>You can also use the same file in a browser</h3>
                 <pre
                   class="usage-code"
                   tabindex="0"
@@ -787,7 +791,7 @@ npx pts-cli interpolate.mjs \
       <section class="section section-soft" aria-labelledby="featuresTitle">
         <div class="container">
           <div class="section-heading">
-            <h2 id="featuresTitle">Included</h2>
+            <h2 id="featuresTitle">Features</h2>
           </div>
 
           <dl class="feature-list">
@@ -796,13 +800,6 @@ npx pts-cli interpolate.mjs \
               <dd>
                 Control the frame, input, parameters, and random seed when a
                 stable result matters.
-              </dd>
-            </div>
-            <div class="feature-row">
-              <dt>Classic demos</dt>
-              <dd>
-                Render a tested subset of unchanged demos through the
-                compatibility loader.
               </dd>
             </div>
             <div class="feature-row">
@@ -818,30 +815,28 @@ npx pts-cli interpolate.mjs \
                 Request JSON output for build scripts, automation, and agents.
               </dd>
             </div>
+            <div class="feature-row">
+              <dt>More</dt>
+              <dd>
+                  See command options and additional documentations in the <a href="https://github.com/williamngan/pts-cli#readme"
+                    >README</a
+                  >.
+              </dd>
+            </div>
           </dl>
-
-          <div class="read-more">
-            <p>
-              Command options, API types, assets, SVG behavior, and the
-              compatibility matrix are documented in the README.
-            </p>
-            <a href="https://github.com/williamngan/pts-cli#readme"
-              >Read the README</a
-            >
-          </div>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <div class="footer-inner container">
-        <strong>Pts.</strong>
+        <strong>pts-cli</strong>
         <div class="footer-links">
           <a href="https://ptsjs.org/">Pts.js</a>
-          <a href="https://github.com/williamngan/pts-cli#readme">README</a>
+          <a href="https://github.com/williamngan/pts-cli#readme">Docs</a>
           <a href="https://github.com/williamngan/pts-cli">GitHub</a>
           <a href="https://github.com/williamngan/pts-cli/blob/main/LICENSE"
-            >License</a
+            >Apache 2.0 License</a
           >
         </div>
       </div>

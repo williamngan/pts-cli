@@ -15,7 +15,7 @@ Pts itself is never patched. All Node integration lives in this repository.
 
 ## Status
 
-This is the `0.1.0` release candidate for published **Pts 1.0.0**. The package
+This is the `0.1.0` release for published **Pts 1.0.0**. The package
 name is `pts-cli`; the executable is `ptsjs`. Keeping the command slightly more
 specific avoids likely collisions around a generic `pts` executable.
 
