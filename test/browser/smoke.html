@@ -285,6 +285,21 @@
             throw error;
         }
 
+        try {
+          await mountScene(() => {}, { target: "#pt-missing" });
+          throw new Error("Missing target mounted");
+        } catch (error) {
+          if (
+            !(error instanceof TypeError) ||
+            !/did not match/.test(error.message)
+          ) {
+            throw error;
+          }
+        }
+        if (document.querySelector("#pt-missing_container")) {
+          throw new Error("Missing target created a container");
+        }
+
         document.body.dataset.status = "passed";
         document.querySelector("#result").textContent = "browser smoke passed";
       } catch (error) {

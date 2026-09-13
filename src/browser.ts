@@ -392,9 +392,14 @@ function resolvedTarget(target: string | Element): string | Element {
       cause: error,
     });
   }
+  if (element === null) {
+    throw new TypeError(
+      "mount options.target did not match an element: " + String(target),
+    );
+  }
   if (
-    element?.nodeName.toLowerCase() === "svg" ||
-    (element?.querySelector(":scope > svg") ?? null) !== null
+    element.nodeName.toLowerCase() === "svg" ||
+    element.querySelector(":scope > svg") !== null
   ) {
     throw new TypeError(
       "mountScene supports CanvasSpace targets, not SVGSpace targets",
