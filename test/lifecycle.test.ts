@@ -67,14 +67,35 @@ describe("SkiaCanvasSpace lifecycle", () => {
     ).toThrow(/canvas area exceeds/);
   });
 
-  it("uses the CPU renderer by default and reports the actual engine", () => {
-    const space = new SkiaCanvasSpace(2, 2);
+  it.each([undefined, "cpu"] as const)(
+    "keeps CPU rendering and engine reporting consistent with renderer %s",
+    async (renderer) => {
+      const space = new SkiaCanvasSpace(
+        2,
+        2,
+        renderer === undefined ? {} : { renderer },
+      );
 
-    expect(space.renderer.requested).toBe("cpu");
-    expect(space.renderer.renderer).toBe("cpu");
-    expect(space.canvas.gpu).toBe(false);
-    expect(space.canvas.engine.renderer).toBe("CPU");
-  });
+      try {
+        expect(space.renderer.requested).toBe("cpu");
+        expect(space.renderer.renderer).toBe("cpu");
+        expect(space.canvas.gpu).toBe(false);
+        expect(space.canvas.engine.renderer).toBe("CPU");
+
+        space.resize(3, 3);
+        space.add(() =>
+          space.getForm().fillOnly("#ff0000").rect(space.innerBound),
+        );
+        space.renderFrame();
+        const raw = await space.toBuffer("raw");
+        expect(pixelAt(raw, 3, 1, 1)).toEqual([255, 0, 0, 255]);
+        expect(space.canvas.gpu).toBe(false);
+        expect(space.canvas.engine.renderer).toBe("CPU");
+      } finally {
+        space.dispose();
+      }
+    },
+  );
 
   it("runs resize, start, and deterministic animate callbacks", () => {
     const calls: string[] = [];

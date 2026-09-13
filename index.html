@@ -213,7 +213,7 @@
       }
 
       .terminal {
-          border-radius: 30px;
+        border-radius: 30px;
       }
 
       .panel-head {
@@ -337,6 +337,15 @@
         line-height: 1.85;
       }
 
+      code.ht {
+        display: inline-block;
+        padding: 1px 5px;
+        margin: 0px 3px;
+        border-radius: 4px;
+        background-color: #f3f5f9;
+        font-size: 0.85em;
+      }
+
       .tok-key {
         color: #b7aaff;
       }
@@ -393,7 +402,7 @@
         display: grid;
         gap: 42px;
         grid-template-columns: 200px 1fr;
-        padding: 24px 0;
+        padding: 16px 0;
         border-bottom: 1px solid var(--line);
       }
 
@@ -694,7 +703,6 @@
                 />
               </svg>
             </article>
-
           </div>
         </div>
       </section>
@@ -704,28 +712,35 @@
           <div class="section-heading">
             <h2>Simple interface</h2>
             <p>
-              Export one function with Pts drawing code, and run `<code>npx pts-cli</code>`.
+              Export one function with Pts drawing code, and run
+              <code class="ht">npx pts-cli file.mjs</code>.
+            </p>
+            <p>
+              Alternatively, install globally via
+              <code class="ht">npm i -g pts-cli</code> and run
+              <code class="ht">ptsjs file.mjs</code>.
             </p>
           </div>
 
           <div class="scene-grid">
-            <article class="usage-block"><h3>Pts.js code sample</h3>
-            <article class="code-panel">
-              <div class="panel-head">
-                <span>interpolate.mjs</span>
-                <button
-                  class="copy-button"
-                  type="button"
-                  data-copy-target="sceneCode"
-                  aria-label="Copy JavaScript example"
-                >
-                  Copy
-                </button>
-              </div>
-              <pre
-                class="source-code"
-                tabindex="0"
-              ><code id="sceneCode"><span class="tok-key">export default function</span> <span class="tok-function">run</span>({ Pts, space, form }) {
+            <article class="usage-block">
+              <h3>Pts.js code sample</h3>
+              <article class="code-panel">
+                <div class="panel-head">
+                  <span>interpolate.mjs</span>
+                  <button
+                    class="copy-button"
+                    type="button"
+                    data-copy-target="sceneCode"
+                    aria-label="Copy JavaScript example"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <pre
+                  class="source-code"
+                  tabindex="0"
+                ><code id="sceneCode"><span class="tok-key">export default function</span> <span class="tok-function">run</span>({ Pts, space, form }) {
   <span class="tok-key">const</span> { Geom, Num, Rectangle } = Pts;
 
   <span class="tok-key">function</span> <span class="tok-function">interpolate</span>(points, t, depth = <span class="tok-number">0</span>) {
@@ -748,7 +763,7 @@
     <span class="tok-function">interpolate</span>(rect, t);
   });
 }</code></pre>
-                </article>
+              </article>
             </article>
 
             <div class="scene-usage">
@@ -818,9 +833,10 @@
             <div class="feature-row">
               <dt>More</dt>
               <dd>
-                  See command options and additional documentations in the <a href="https://github.com/williamngan/pts-cli#readme"
-                    >README</a
-                  >.
+                See command options and additional documentations in the
+                <a href="https://github.com/williamngan/pts-cli#readme"
+                  >README</a
+                >.
               </dd>
             </div>
           </dl>

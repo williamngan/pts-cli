@@ -451,11 +451,11 @@ export class SkiaCanvasSpace extends Space {
     this.#refreshEnabled = options.refresh ?? true;
 
     const requestedRenderer = normalizeRenderer(options.renderer ?? "cpu");
-    const nativeOptions = {
-      gpu: requestedRenderer !== "cpu",
-    } as unknown as ConstructorParameters<typeof NativeCanvas>[2];
-
-    this.#canvas = new NativeCanvas(width, height, nativeOptions);
+    this.#canvas = new NativeCanvas(width, height);
+    // In skia-canvas 3.0.8 the constructor's gpu option leaves the engine
+    // unselected. The setter selects it explicitly, keeping gpu and engine
+    // consistent on machines where the default backend supports GPU rendering.
+    this.#canvas.gpu = requestedRenderer !== "cpu";
     const engine = this.#canvas.engine;
     const actualRenderer = engine.renderer === "GPU" ? "gpu" : "cpu";
     const rendererInfo: {

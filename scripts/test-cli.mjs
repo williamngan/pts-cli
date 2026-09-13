@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   rm,
   stat,
   symlink,
@@ -61,7 +62,11 @@ function run(args, cwd) {
   });
 }
 
-const temporary = await mkdtemp(join(tmpdir(), "pts-cli-integration-"));
+// Child processes resolve cwd symlinks, including macOS temporary directories.
+// Use the same canonical path when checking their generated output locations.
+const temporary = await realpath(
+  await mkdtemp(join(tmpdir(), "pts-cli-integration-")),
+);
 
 try {
   const help = await run(["--help"]);
