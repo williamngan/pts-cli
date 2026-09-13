@@ -555,6 +555,14 @@ export async function mountScene(
     resize: options.resize ?? !fixedSize,
     retina: options.retina ?? true,
   });
+  // Pts creates an inline canvas. In a container without an explicit height
+  // the inline baseline gap makes the container a few pixels taller than the
+  // canvas, the ResizeObserver then grows the canvas to match, and the loop
+  // repeats indefinitely. A block canvas has no baseline gap.
+  const canvas = space.element;
+  if (canvas instanceof HTMLCanvasElement && canvas.style.display === "") {
+    canvas.style.display = "block";
+  }
 
   let cleanup: SceneCleanup | undefined;
   let assets: BrowserSceneAssets | undefined;

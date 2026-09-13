@@ -23,6 +23,7 @@
     <div id="pt"></div>
     <div id="pt-function"></div>
     <div id="pt-sized"></div>
+    <div id="pt-unsized"></div>
     <output id="result">pending</output>
     <script type="module">
       import * as Pts from "pts";
@@ -326,6 +327,9 @@
               sized.space.element.height,
           );
         }
+        if (getComputedStyle(sized.space.element).display !== "block") {
+          throw new Error("mounted canvas is not display:block");
+        }
         await sized.dispose();
 
         const sceneSized = await mountScene(
@@ -350,6 +354,28 @@
           throw new Error("explicit resize: true did not follow the container");
         }
         await followsContainer.dispose();
+
+        const unsized = await mountScene(
+          ({ space }) => {
+            space.add(() => {});
+          },
+          { target: "#pt-unsized", retina: false },
+        );
+        const initialHeight = unsized.space.element.height;
+        await settle();
+        await settle();
+        if (
+          initialHeight <= 0 ||
+          unsized.space.element.height !== initialHeight
+        ) {
+          throw new Error(
+            "unsized container canvas grew from " +
+              initialHeight +
+              " to " +
+              unsized.space.element.height,
+          );
+        }
+        await unsized.dispose();
 
         document.body.dataset.status = "passed";
         document.querySelector("#result").textContent = "browser smoke passed";
