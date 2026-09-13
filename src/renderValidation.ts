@@ -164,6 +164,11 @@ function assertNonNegativeSafeInteger(value: unknown, name: string): number {
   return value;
 }
 
+/** A drive letter is a filesystem prefix, even though it resembles a URL scheme. */
+export function isURLReference(value: string): boolean {
+  return /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value) && !/^[a-zA-Z]:/.test(value);
+}
+
 function toFilePath(value: string | URL, cwd: string, name: string): string {
   if (value instanceof URL) {
     if (value.protocol !== "file:")
@@ -173,7 +178,7 @@ function toFilePath(value: string | URL, cwd: string, name: string): string {
   if (typeof value !== "string" || value.length === 0) {
     invalid(name + " must be a non-empty path or file URL");
   }
-  if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)) {
+  if (isURLReference(value)) {
     let url: URL;
     try {
       url = new URL(value);
@@ -191,7 +196,7 @@ function toAssetURL(value: string | URL, cwd: string, name: string): string {
   if (typeof value !== "string" || value.length === 0) {
     invalid(name + " must be a non-empty URL or path");
   }
-  if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)) {
+  if (isURLReference(value)) {
     try {
       return new URL(value).href;
     } catch {

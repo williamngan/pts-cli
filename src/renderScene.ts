@@ -441,6 +441,16 @@ async function verifyAndCommit(
       );
     }
     total += facts.bytes;
+    if (
+      plan.destination === undefined &&
+      facts.bytes > request.limits.maxBufferResultBytes
+    ) {
+      throw new PtsRenderError(
+        "RESOURCE_LIMIT",
+        "commit",
+        "Buffer output exceeds limits.maxBufferResultBytes",
+      );
+    }
     verified.push(facts);
   }
 
@@ -459,13 +469,6 @@ async function verifyAndCommit(
     }
 
     if (plan.destination === undefined) {
-      if (facts.bytes > request.limits.maxBufferResultBytes) {
-        throw new PtsRenderError(
-          "RESOURCE_LIMIT",
-          "commit",
-          "Buffer output exceeds limits.maxBufferResultBytes",
-        );
-      }
       let buffer: Buffer;
       try {
         buffer = await readFile(plan.artifactPath);

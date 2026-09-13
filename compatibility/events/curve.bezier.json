@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "events": [
+    { "at": 0, "type": "move", "x": 40, "y": 140 },
+    { "at": 16, "type": "move", "x": 100, "y": 40 },
+    { "at": 32, "type": "move", "x": 200, "y": 160 },
+    { "at": 48, "type": "move", "x": 280, "y": 60 }
+  ]
+}

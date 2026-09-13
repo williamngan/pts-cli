@@ -7,6 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { mkdtemp } from "node:fs/promises";
+import { Canvas, loadImage } from "skia-canvas";
 
 import { renderScene } from "../dist/index.mjs";
 
@@ -91,7 +92,7 @@ function renderOptions(root, entry, outputDirectory, demoName, events) {
   };
 }
 
-async function verifyEncodedOutput(output) {
+async function verifyEncodedOutput(output, entry, width, height) {
   if (output.path === undefined || output.bytes < 100) {
     fail("Compatibility output is missing or implausibly small");
   }
@@ -111,6 +112,30 @@ async function verifyEncodedOutput(output) {
   ) {
     fail("Compatibility SVG does not contain an SVG root");
   }
+  if (output.format === "svg") {
+    for (const fragment of entry.svgMustContain ?? []) {
+      if (!bytes.includes(Buffer.from(fragment)))
+        fail("SVG is missing required content: " + fragment);
+    }
+  }
+  const image = await loadImage(bytes);
+  if (image.width !== width || image.height !== height)
+    fail("Rendered dimensions do not match the result");
+  const canvas = new Canvas(width, height, { gpu: false });
+  canvas.getContext("2d").drawImage(image, 0, 0);
+  const pixels = await canvas.toBuffer("raw");
+  let changed = 0;
+  for (let offset = 4; offset < pixels.length; offset += 4) {
+    if (
+      pixels
+        .subarray(offset, offset + 4)
+        .some((channel, index) => Math.abs(channel - pixels[index]) > 8)
+    )
+      changed++;
+  }
+  if (changed < 10)
+    fail("Compatibility output contains no meaningful foreground drawing");
+  return bytes;
 }
 
 async function verifySupported(root, outputDirectory, demoName, entry) {
@@ -135,7 +160,22 @@ async function verifySupported(root, outputDirectory, demoName, entry) {
   if (result.outputs.length !== entry.formats.length) {
     fail(demoName + " returned an unexpected output count");
   }
-  await Promise.all(result.outputs.map(verifyEncodedOutput));
+  const encoded = await Promise.all(
+    result.outputs.map((output) =>
+      verifyEncodedOutput(output, entry, result.width, result.height),
+    ),
+  );
+  if (warningCodes.includes("SVG_RASTER_FALLBACK")) {
+    const png =
+      encoded[result.outputs.findIndex((output) => output.format === "png")];
+    const svg =
+      encoded[
+        result.outputs.findIndex((output) => output.format === "svg")
+      ].toString();
+    const embedded = /data:image\/png;base64,([^"\s]+)/.exec(svg)?.[1];
+    if (!embedded || !Buffer.from(embedded, "base64").equals(png))
+      fail("SVG fallback does not preserve the complete raster drawing");
+  }
 }
 
 async function verifyUnsupported(root, outputDirectory, demoName, entry) {
@@ -166,25 +206,17 @@ async function verifyUnsupported(root, outputDirectory, demoName, entry) {
 }
 
 async function main() {
-  const rootArgument = process.argv[2] ?? process.env.PTS_COMPAT_ROOT;
-  if (!rootArgument) {
-    fail(
-      "Pass a detached Pts checkout as the first argument or PTS_COMPAT_ROOT",
-    );
-  }
+  const rootArgument =
+    process.argv[2] ??
+    process.env.PTS_COMPAT_ROOT ??
+    join(projectRoot, "test/fixtures/pts-1.0.0");
   const root = await realpath(resolve(rootArgument));
   const installedPtsRoot = await realpath(
     dirname(require.resolve("pts/package.json")),
   );
-  if (installedPtsRoot !== root) {
-    fail(
-      "node_modules/pts must resolve to the exact checkout under test: " + root,
-    );
-  }
-
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   const packageMetadata = JSON.parse(
-    await readFile(join(root, "package.json"), "utf8"),
+    await readFile(join(installedPtsRoot, "package.json"), "utf8"),
   );
   if (packageMetadata.version !== manifest.pts.version) {
     fail("Pts package version does not match the compatibility manifest");
@@ -205,6 +237,10 @@ async function main() {
   const outputDirectory = await mkdtemp(join(tmpdir(), "pts-compat-"));
   const counts = Object.create(null);
   try {
+    for (const [asset, expectedHash] of Object.entries(manifest.assets)) {
+      if (sha256(await readFile(join(root, asset))) !== expectedHash)
+        fail(asset + " does not match its manifest asset hash");
+    }
     for (const [demoName, entry] of Object.entries(manifest.demos)) {
       const sourcePath = join(root, "demo", demoName);
       const beforeHash = sha256(await readFile(sourcePath));

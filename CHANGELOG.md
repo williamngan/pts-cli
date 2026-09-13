@@ -43,8 +43,8 @@
 - Package and repository identity are now `pts-cli`.
 - Logical dimensions are optional, default to `800x600`, and remain overridable
   through `--size` or the programmatic `size` option.
-- skia-canvas is a normal exact runtime dependency. Pts remains the single
-  unbundled revamp peer.
+- skia-canvas is a normal exact runtime dependency. Pts is an unbundled `^1.0.0`
+  registry peer, with development locked to published `1.0.0`.
 - `SkiaCanvasSpace` now supports deterministic pointer/actions, runner-owned
   deferred initialization, explicit renderer selection, allocation ceilings, and
   SVG.
@@ -53,14 +53,42 @@
   scene execution.
 - Hostile or uninspectable option proxies are normalized into stable usage
   errors instead of escaping the public error contract.
-- Synthetic Pts action dispatch derives its event parameter from the installed
-  revamp `IPlayer` contract, supporting both the earlier `Event` signature and
-  the latest `UIActionEvent` signature without patching Pts.
+- Synthetic Pts action dispatch derives its event parameter from the Pts 1.0
+  `IPlayer` contract without patching Pts.
 
-### Release gates
+### Fixed
 
-- The reviewed local Pts `revamp` baseline
-  `7031a246c6870b8175160e62baf1193967d029c9` is not yet available from the
-  configured public Git ref, so the package remains private.
+- Classic `Util.isMobile()` works on Node 20 without depending on a global
+  browser `navigator`; the actual Pts implementation is left untouched.
+- Windows drive paths are no longer mistaken for URL schemes.
+- Filtered Canvas drawing is preserved in SVG through an explicit whole-canvas
+  PNG fallback, reported as `SVG_RASTER_FALLBACK`.
+- Direct CommonJS Pts imports and separate Pts bundles cannot silently split
+  instance state or seeded randomness. CommonJS scenes can use `context.Pts` or
+  dynamic ESM imports instead.
+- Browser aborts dispose resources promptly and invoke cleanup returned by
+  asynchronous setup exactly once, even if setup completes after cancellation.
+- Source import and scene cleanup failures use the documented CLI exit groups.
+- Blank numeric options and empty JSON input filenames are rejected.
+- Buffer limits are checked before any output file is committed.
+- Rejected HTTP asset responses and aborted streams are canceled; mid-fetch
+  cancellation retains the structured abort error.
+
+### Release verification
+
+- Clean-source packing builds distribution files automatically; publishing
+  reruns the full release gate. The package is no longer marked private.
+- Fresh npm consumers verify published Pts resolution, ESM/CommonJS exports,
+  native rendering, the installed executable, and duplicate-instance rejection.
+- Coverage thresholds guard the runtime tests, with separate CLI/Chromium
+  end-to-end suites. CI runs native tests on Linux, macOS, and Windows with Node
+  20, 22, and 24.
+- All 26 compatibility cases now use byte-exact Pts 1.0.0 source and image
+  fixtures, source/asset hashes, and decoded output assertions. Input is
+  supplied to the interactive Bezier demo so a blank output cannot count as
+  success.
+
+### Known boundaries
+
 - Editable/pixel legacy Img, Sound, HTMLSpace, SVGSpace, and offscreen browser
   helpers remain outside the supported Node contract.

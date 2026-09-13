@@ -1,5 +1,10 @@
 # Pts CLI and standard-demo compatibility plan
 
+> Historical implementation plan. The Pts 1.0.0 release supersedes the Git
+> dependency blockers and baseline below. Current behavior and verification
+> requirements are documented in [README.md](../README.md) and
+> [COMPATIBILITY-NOTES.md](COMPATIBILITY-NOTES.md).
+
 > Implementation status (2026-08-21): Phases 1-3 are implemented; Phase 4 has an
 > exact-source compatibility runtime and representative manifest; Phase 5
 > supports portable assets plus the non-editable legacy image subset. Browser,

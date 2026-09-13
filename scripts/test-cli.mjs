@@ -487,6 +487,208 @@ try {
     programmatic.logs.stdout.includes("portable-card run"),
     "scene log missing",
   );
+
+  const importFailure = join(temporary, "import-failure.mjs");
+  await writeFile(
+    importFailure,
+    'import "./missing-module.mjs"; export default function run() {}',
+  );
+  const failedImport = await run([importFailure, "--json"], temporary);
+  assert(failedImport.code === 3, "source import failure must exit 3");
+  assert(
+    JSON.parse(failedImport.stdout).error.phase === "load",
+    "import failure lost its phase",
+  );
+
+  const cleanupFailure = join(temporary, "cleanup-failure.mjs");
+  await writeFile(
+    cleanupFailure,
+    'export default function run() { return () => { throw new Error("cleanup exploded"); }; }',
+  );
+  const failedCleanup = await run([cleanupFailure, "--json"], temporary);
+  assert(failedCleanup.code === 4, "scene cleanup failure must exit 4");
+  assert(
+    JSON.parse(failedCleanup.stdout).error.phase === "cleanup",
+    "cleanup failure lost its phase",
+  );
+
+  for (const fixture of ["foreign-commonjs.cjs", "foreign-bundle.mjs"]) {
+    const rejected = await run(
+      [resolve("test/fixtures/scenes", fixture), "--seed", "fixture", "--json"],
+      temporary,
+    );
+    const error = JSON.parse(rejected.stdout).error;
+    assert(
+      rejected.code === 3 && error.code === "PTS_INSTANCE_MISMATCH",
+      fixture + " selected a second Pts implementation",
+    );
+    assert(
+      error.hint.includes("Pts"),
+      "mismatch error must include an alternative",
+    );
+  }
+  let canonicalRandom;
+  for (const [fixture, dynamicImport] of [
+    ["random-esm.mjs", false],
+    ["random-commonjs.cjs", false],
+    ["random-commonjs.cjs", true],
+  ]) {
+    const samples = [];
+    for (const noise of [false, true]) {
+      const result = await renderScene(
+        resolve("test/fixtures/scenes", fixture),
+        {
+          seed: "fixture",
+          params: { noise, dynamicImport },
+          outputs: [{ format: "png" }],
+        },
+      );
+      samples.push(JSON.parse(result.logs.stdout));
+      assert(
+        result.runtime.ptsVersion === "1.0.0",
+        "integration test is not using published Pts 1.0.0",
+      );
+    }
+    assert(
+      JSON.stringify(samples[0].pts) === JSON.stringify(samples[1].pts),
+      "Math.random changed the Pts seeded stream",
+    );
+    assert(
+      samples[0].math !== samples[1].math,
+      "the Math stream did not advance",
+    );
+    canonicalRandom ??= samples[0].pts;
+    assert(
+      JSON.stringify(samples[0].pts) === JSON.stringify(canonicalRandom),
+      "ESM/CommonJS seeded streams differ",
+    );
+  }
+
+  const filteredScene = resolve("test/fixtures/scenes/filtered-image.mjs");
+  const filtered = await renderScene(filteredScene, {
+    outputs: [{ format: "png" }, { format: "svg" }],
+  });
+  assert(
+    filtered.warnings.some((warning) => warning.code === "SVG_RASTER_FALLBACK"),
+    "SVG fallback warning missing",
+  );
+  const embedded = /data:image\/png;base64,([^"\s]+)/.exec(
+    filtered.outputs[1].buffer.toString(),
+  )?.[1];
+  assert(
+    embedded &&
+      Buffer.from(embedded, "base64").equals(filtered.outputs[0].buffer),
+    "filtered SVG lost image content",
+  );
+  const humanFallback = await run([
+    filteredScene,
+    "--out",
+    join(temporary, "filtered.svg"),
+  ]);
+  assert(
+    humanFallback.code === 0 &&
+      humanFallback.stderr.includes("SVG_RASTER_FALLBACK"),
+    "human CLI hides SVG fallback",
+  );
+  const limitedFallback = await run([
+    filteredScene,
+    "--out",
+    join(temporary, "limited.svg"),
+    "--limit",
+    "maxRasterPixelsPerOutput=1",
+    "--json",
+  ]);
+  assert(
+    limitedFallback.code === 2 &&
+      JSON.parse(limitedFallback.stdout).error.code === "RESOURCE_LIMIT",
+    "SVG fallback bypassed raster allocation limits",
+  );
+  assert(
+    !existsSync(join(temporary, "limited.svg")),
+    "failed SVG output was committed",
+  );
+
+  const timelineFile = join(temporary, "events.json");
+  await writeFile(
+    timelineFile,
+    JSON.stringify({
+      schemaVersion: 1,
+      events: [
+        { at: 50, type: "move", x: 4, y: 2 },
+        { at: 0, type: "resize", width: 10, height: 6 },
+        { at: 50, type: "down", x: 5, y: 3 },
+        { at: 200, type: "move", x: 99, y: 99 },
+      ],
+    }),
+  );
+  for (const clock of [
+    ["--frame", "2", "--fps", "20"],
+    ["--time", "100"],
+  ]) {
+    const timeline = await run([
+      resolve("test/fixtures/scenes/timeline.mjs"),
+      ...clock,
+      "--events",
+      timelineFile,
+      "--pointer",
+      "1,1",
+      "--out",
+      join(temporary, clock[0] + ".png"),
+      "--json",
+    ]);
+    assert(timeline.code === 0, timeline.stdout.toString());
+    const record = JSON.parse(timeline.stdout);
+    const calls = record.logs.stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    const frames = calls.filter((call) => call[0] === "frame");
+    const expectedFrames =
+      clock[0] === "--frame"
+        ? [
+            ["frame", 0, 0, 1, 1],
+            ["frame", 50, 50, 5, 3],
+            ["frame", 100, 50, 5, 3],
+          ]
+        : [["frame", 100, 0, 5, 3]];
+    assert(
+      JSON.stringify(frames) === JSON.stringify(expectedFrames),
+      "CLI clock or input replay is incorrect",
+    );
+    assert(
+      JSON.stringify(
+        calls.filter((call) => ["move", "down"].includes(call[0])),
+      ) ===
+        JSON.stringify([
+          ["move", 4, 2, 50],
+          ["down", 5, 3, 50],
+        ]),
+      "event ordering or final-time cutoff is incorrect",
+    );
+    assert(
+      record.width === 10 &&
+        record.height === 6 &&
+        calls.at(-1)[0] === "cleanup",
+      "resize or cleanup result is incorrect",
+    );
+  }
+
+  const overwritten = await run([
+    scene,
+    "--out",
+    pngPath,
+    "--background",
+    "#ffffff",
+    "--force",
+    "--json",
+  ]);
+  assert(overwritten.code === 0, "--force did not replace a regular file");
+  assert(
+    JSON.parse(overwritten.stdout).outputs[0].sha256 !==
+      record.outputs[0].sha256,
+    "--force did not change output contents",
+  );
+  console.log("CLI integration and release regressions passed");
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

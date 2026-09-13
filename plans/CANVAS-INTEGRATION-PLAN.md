@@ -1,10 +1,11 @@
 # Canvas integration plan
 
 > Historical first-milestone plan. The implemented CLI, portable/browser scene
-> contract, classic loader, and SVG scope are governed by
-> [PTS-CLI-AND-DEMO-COMPATIBILITY-PLAN.md](PTS-CLI-AND-DEMO-COMPATIBILITY-PLAN.md).
-> Statements below that defer SVG or browser mounting describe the earlier
-> milestone, not the current package surface.
+> contract, classic loader, and SVG scope are documented in
+> [README.md](../README.md) and
+> [COMPATIBILITY-NOTES.md](COMPATIBILITY-NOTES.md). Statements below that defer
+> SVG or browser mounting describe the earlier milestone, not the current
+> package surface.
 
 Status: Implemented locally; cross-platform CI and publication pending  
 Date: 2026-08-18  

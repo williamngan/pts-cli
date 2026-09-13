@@ -196,6 +196,95 @@
         }
         await functionMounted.dispose();
 
+        for (const cleanupThrows of [false, true]) {
+          const controller = new AbortController();
+          let enterRun;
+          let finishRun;
+          const entered = new Promise((resolve) => {
+            enterRun = resolve;
+          });
+          const finish = new Promise((resolve) => {
+            finishRun = resolve;
+          });
+          let lateCleanupCalls = 0;
+          let starts = 0;
+          const mounting = mountScene(
+            async ({ space }) => {
+              enterRun();
+              await finish;
+              space.add({
+                start() {
+                  starts++;
+                },
+              });
+              return async () => {
+                lateCleanupCalls++;
+                await Promise.resolve();
+                if (cleanupThrows) throw new Error("cleanup failure");
+              };
+            },
+            {
+              target: "#pt-function",
+              signal: controller.signal,
+              autoplay: false,
+              resize: false,
+            },
+          );
+          await entered;
+          controller.abort();
+          finishRun();
+          let error;
+          try {
+            await mounting;
+          } catch (caught) {
+            error = caught;
+          }
+          if (
+            error?.name !== "AbortError" ||
+            lateCleanupCalls !== 1 ||
+            starts !== 0
+          ) {
+            throw new Error(
+              "Abort during setup lost cleanup or started a cancelled player",
+            );
+          }
+        }
+
+        const mountedController = new AbortController();
+        let disposeCalls = 0;
+        const abortMounted = await mountScene(
+          () => () => {
+            disposeCalls++;
+          },
+          {
+            target: "#pt-function",
+            signal: mountedController.signal,
+            autoplay: false,
+            resize: false,
+          },
+        );
+        mountedController.abort();
+        await abortMounted.dispose();
+        await abortMounted.dispose();
+        if (disposeCalls !== 1)
+          throw new Error("Abort after mounting duplicated cleanup");
+
+        const preAborted = new AbortController();
+        preAborted.abort();
+        let cancelledRunCalls = 0;
+        try {
+          await mountScene(
+            () => {
+              cancelledRunCalls++;
+            },
+            { target: "#pt-function", signal: preAborted.signal },
+          );
+          throw new Error("Pre-aborted mount succeeded");
+        } catch (error) {
+          if (error.name !== "AbortError" || cancelledRunCalls !== 0)
+            throw error;
+        }
+
         document.body.dataset.status = "passed";
         document.querySelector("#result").textContent = "browser smoke passed";
       } catch (error) {

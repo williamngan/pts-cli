@@ -76,6 +76,8 @@ function exitCode(error: PtsRenderError): number {
   ) {
     return 3;
   }
+  if (error.code === "SCENE_FAILED" && error.phase === "load") return 3;
+  if (error.code === "SCENE_FAILED" && error.phase === "cleanup") return 4;
   if (error.code === "OUTPUT_EXISTS" || error.code === "OUTPUT_COMMIT_FAILED") {
     return 5;
   }
@@ -155,6 +157,11 @@ async function main(): Promise<void> {
     }
 
     if (!parsed.quiet) {
+      for (const warning of result.warnings) {
+        process.stderr.write(
+          "ptsjs: " + warning.code + ": " + warning.message + "\n",
+        );
+      }
       if (result.logs.stdout) process.stderr.write(result.logs.stdout);
       if (result.logs.stderr) process.stderr.write(result.logs.stderr);
     }

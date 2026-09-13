@@ -1,14 +1,13 @@
 {
   "schemaVersion": 1,
   "pts": {
-    "branch": "revamp",
-    "commit": "7031a246c6870b8175160e62baf1193967d029c9",
-    "version": "0.12.9"
+    "version": "1.0.0",
+    "commit": "034e5f6ac8bcf54d2121ef88799ac43fc4b2c827"
   },
   "demos": {
     "canvasform.composite.js": {
       "status": "supported",
-      "sourceSha256": "5f5ca53df024038fd5ae607ce92823f4de51d741646c865fa7fe44bc63f2fdc8",
+      "sourceSha256": "f38c7f9669336e4ff285af5098c0b5cf8c03cdf590327e9ef790f3f5a10406bc",
       "fixture": {
         "size": [320, 200],
         "frame": 3,
@@ -21,7 +20,7 @@
     },
     "canvasform.gradient.js": {
       "status": "supported",
-      "sourceSha256": "cf16e6c3de1f441adfafe0ed3a52323b4f6689076638f2a548afec1f1205d3f7",
+      "sourceSha256": "46c9a6cb0c1c46491629d8683f601102bee46e7113819d7688d7fb3065306541",
       "fixture": {
         "size": [320, 200],
         "frame": 3,
@@ -101,7 +100,7 @@
     },
     "create.delaunay.js": {
       "status": "supported",
-      "sourceSha256": "a42da24b04cd47ccfaff11c8fe47518d6345d0dbc0beca9fd24286cb9364a413",
+      "sourceSha256": "e5a358433202dbd00348359562c673098fb6bfe95fc7e3cad84eb5c838f2b486",
       "fixture": {
         "size": [320, 200],
         "frame": 3,
@@ -113,7 +112,7 @@
       "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
     },
     "curve.bezier.js": {
-      "status": "supported",
+      "status": "supported-with-input",
       "sourceSha256": "0a977d49796e08d3540f8375d7e5d304d2b4771848e1c0564e8878372297ee4d",
       "fixture": {
         "size": [320, 200],
@@ -123,7 +122,8 @@
         "seed": "compat"
       },
       "formats": ["png", "svg"],
-      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"]
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY"],
+      "events": "events/curve.bezier.json"
     },
     "guide.getting_started_1.js": {
       "status": "supported",
@@ -192,7 +192,7 @@
     },
     "template.js": {
       "status": "supported",
-      "sourceSha256": "0e5b4ba4a1450604a5dbf7df223a1303a4d52d56dd6fa990dc4e1476d546aac1",
+      "sourceSha256": "641428e6a50bb23d68e123a3b08d1c4aadf47069283291aa819a086b6acea716",
       "fixture": {
         "size": [320, 200],
         "frame": 3,
@@ -218,7 +218,7 @@
     },
     "ui.track.js": {
       "status": "supported-with-input",
-      "sourceSha256": "eae884ae088e21884a6f6bc69bea041e98364d9cfa8e5cf2da2b37c0d80348a1",
+      "sourceSha256": "9fa61a1ba6a001fb34230821aa1f2af130fa8ff9a38eefa28c7dd01dc9b81011",
       "fixture": {
         "size": [320, 200],
         "frame": 3,
@@ -242,7 +242,8 @@
       },
       "assetRoot": ".",
       "formats": ["png", "svg"],
-      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"],
+      "svgMustContain": ["<image"]
     },
     "guide.image_load2.js": {
       "status": "supported",
@@ -256,7 +257,12 @@
       },
       "assetRoot": ".",
       "formats": ["png", "svg"],
-      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+      "warningCodes": [
+        "CLASSIC_DEMO_COMPATIBILITY",
+        "CLASSIC_IMAGE_BRIDGE",
+        "SVG_RASTER_FALLBACK"
+      ],
+      "svgMustContain": ["<image"]
     },
     "guide.image_pattern.js": {
       "status": "supported",
@@ -270,7 +276,8 @@
       },
       "assetRoot": ".",
       "formats": ["png", "svg"],
-      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"],
+      "svgMustContain": ["<image"]
     },
     "guide.image_pattern2.js": {
       "status": "supported",
@@ -284,11 +291,12 @@
       },
       "assetRoot": ".",
       "formats": ["png", "svg"],
-      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"]
+      "warningCodes": ["CLASSIC_DEMO_COMPATIBILITY", "CLASSIC_IMAGE_BRIDGE"],
+      "svgMustContain": ["<image"]
     },
     "guide.sound_mic.js": {
       "status": "not-applicable",
-      "sourceSha256": "74cf8d54f753c113fcd7f09ee8bb0c1ac513efc0a3dd7d4002128b18efa4bb1d",
+      "sourceSha256": "0d35602ac740994eb61d263cd6765670e2a020c55b738ba2718391343eecddc1",
       "events": "events/guide.sound_mic.json",
       "reason": "AUDIO_UNSUPPORTED",
       "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
@@ -313,9 +321,13 @@
     },
     "svgform.scope.js": {
       "status": "not-applicable",
-      "sourceSha256": "636fc1ba44a54f5146f89620710fe89df2bb50e2e5974d252164e4cb90556760",
+      "sourceSha256": "e6f38c3128c0f59d9e7890668607aa3789e5180a58b51ecebb612b92e5494ea4",
       "reason": "SVGSPACE_UNSUPPORTED_USE_SVG_EXPORT",
       "expectedErrorCode": "COMPAT_API_UNSUPPORTED"
     }
+  },
+  "assets": {
+    "assets/img_demo.jpg": "aa4c2694a6010f7ce0194d4a56f33cf71db22ad2e168e148a99049e696731280",
+    "assets/img_pattern.jpg": "38e375fb8fd6e39c0feb84978715d64fdcf72f054f6c1bd6a03f99e4cf1a24c9"
   }
 }

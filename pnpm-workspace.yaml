@@ -4,3 +4,6 @@ packages:
 allowBuilds:
   esbuild: true
   skia-canvas: true
+
+minimumReleaseAgeExclude:
+  - pts@1.0.0

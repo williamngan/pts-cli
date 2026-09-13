@@ -127,6 +127,32 @@ async function preflightPortableSource(source: string): Promise<void> {
         },
       );
     }
+    // Pts ships separate ESM and CommonJS implementations. Matching package
+    // directories alone do not guarantee shared classes or random state.
+    if (analysis.ptsCommonJsReferences.length > 0) {
+      throw new PtsRenderError(
+        "PTS_INSTANCE_MISMATCH",
+        "load",
+        'require("pts") loads a different Pts instance from the render worker',
+        {
+          details: { source, specifiers: analysis.ptsCommonJsReferences },
+          hint: 'Use context.Pts in CommonJS scenes, or await import("pts") to use the worker\'s ESM instance.',
+        },
+      );
+    }
+    for (const specifier of analysis.ptsRuntimeReferences) {
+      const imported = (await import(specifier)) as typeof Pts;
+      if (imported.Num !== Pts.Num || imported.Pt !== Pts.Pt) {
+        throw new PtsRenderError(
+          "PTS_INSTANCE_MISMATCH",
+          "load",
+          "Scene import selects a different Pts implementation: " + specifier,
+          {
+            hint: 'Import from "pts" or use context.Pts instead of a separate Pts bundle.',
+          },
+        );
+      }
+    }
   } catch (error) {
     if (error instanceof PtsRenderError) throw error;
     throw new PtsRenderError(
@@ -383,7 +409,7 @@ function validateFinalRasterLimits(
   let total = 0;
   for (const output of job.outputs) {
     const request = output.request as unknown as Record<string, unknown>;
-    if (request.format === "svg") continue;
+    if (request.format === "svg" && !space.svgRasterFallback) continue;
     const density = typeof request.density === "number" ? request.density : 1;
     const logicalPixels = space.width * space.height;
     if (
@@ -650,6 +676,20 @@ export async function runWorkerJob(
     }
     classic?.invokeReadyCallbacks();
     renderFrames(space, job);
+    if (
+      space.svgRasterFallback &&
+      job.outputs.some((output) => output.request.format === "svg")
+    ) {
+      warnings = [
+        ...warnings,
+        {
+          code: "SVG_RASTER_FALLBACK",
+          phase: "export",
+          message:
+            "Canvas filters require SVG to embed the complete drawing as a PNG at density 1; text is rasterized too.",
+        },
+      ];
+    }
     outputs = await exportOutputs(space, job);
   } catch (error) {
     primaryError = error;

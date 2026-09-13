@@ -1,4 +1,5 @@
 import { extname } from "node:path";
+import { writeFile } from "node:fs/promises";
 
 import {
   Bound,
@@ -437,6 +438,7 @@ export class SkiaCanvasSpace extends Space {
   #pointerExplicit = false;
   #refreshEnabled: boolean;
   #rendering = false;
+  #svgRasterFallback = false;
 
   constructor(width = 300, height = 150, options: SkiaCanvasSpaceOptions = {}) {
     super();
@@ -488,6 +490,28 @@ export class SkiaCanvasSpace extends Space {
     }
 
     this.#nativeContext = this.#canvas.getContext("2d");
+    // Skia's SVG encoder silently omits filtered drawing commands. Observe
+    // accepted filter assignments on this context only, retaining native
+    // accessors. Conservatively keep the flag for this canvas's lifetime.
+    const filter = Object.getOwnPropertyDescriptor(
+      Object.getPrototypeOf(this.#nativeContext) as object,
+      "filter",
+    );
+    if (!filter?.get || !filter.set) {
+      throw new SkiaCanvasError(
+        "UNSUPPORTED_OPERATION",
+        "The native canvas filter accessor is unavailable",
+      );
+    }
+    const context = this.#nativeContext;
+    Object.defineProperty(context, "filter", {
+      configurable: true,
+      get: () => filter.get?.call(context) as string,
+      set: (value: string) => {
+        filter.set?.call(context, value);
+        if (context.filter !== "none") this.#svgRasterFallback = true;
+      },
+    });
     this._ctx = toPtsContext(this.#nativeContext);
     this.bound = new Bound(new Pt(0, 0), new Pt(width, height));
     this._pointer = this.center;
@@ -530,6 +554,11 @@ export class SkiaCanvasSpace extends Space {
 
   get renderer(): RendererInfo {
     return this.#rendererInfo;
+  }
+
+  /** SVG embeds a raster snapshot when this canvas has used a Canvas filter. */
+  get svgRasterFallback(): boolean {
+    return this.#svgRasterFallback;
   }
 
   get background(): string {
@@ -781,9 +810,7 @@ export class SkiaCanvasSpace extends Space {
     const normalized = normalizeFormat(format);
     validateExportOptions(normalized, options);
 
-    return this.#export(() =>
-      this.#canvas.toBuffer(normalized, toNativeExportOptions(options)),
-    );
+    return this.#export(() => this.#encode(normalized, options));
   }
 
   toFile(filename: string, options?: RasterFileOptions): Promise<void>;
@@ -835,7 +862,13 @@ export class SkiaCanvasSpace extends Space {
       format,
     };
 
-    return this.#export(() => this.#canvas.toFile(filename, nativeOptions));
+    return this.#export(async () => {
+      if (format === "svg" && this.#svgRasterFallback) {
+        await writeFile(filename, await this.#encode(format, exportOptions));
+      } else {
+        await this.#canvas.toFile(filename, nativeOptions);
+      }
+    });
   }
 
   toURL(format: "svg", options?: SvgExportOptions): Promise<string>;
@@ -853,9 +886,13 @@ export class SkiaCanvasSpace extends Space {
     }
 
     validateExportOptions(normalized, options);
-    return this.#export(() =>
-      this.#canvas.toURL(normalized, toNativeExportOptions(options)),
-    );
+    return this.#export(async () => {
+      if (normalized === "svg" && this.#svgRasterFallback) {
+        const buffer = await this.#encode(normalized, options);
+        return "data:image/svg+xml;base64," + buffer.toString("base64");
+      }
+      return this.#canvas.toURL(normalized, toNativeExportOptions(options));
+    });
   }
 
   dispose(): this {
@@ -1049,6 +1086,37 @@ export class SkiaCanvasSpace extends Space {
       context.restore();
       resetPtsStyleCache(context);
     }
+  }
+
+  async #encode(
+    format: OutputFormat,
+    options: RasterExportOptions | SvgExportOptions,
+  ): Promise<Buffer> {
+    if (format !== "svg" || !this.#svgRasterFallback) {
+      return this.#canvas.toBuffer(format, toNativeExportOptions(options));
+    }
+    const png = await this.#canvas.toBuffer("png", { density: 1 });
+    const width = String(this.#canvas.width);
+    const height = String(this.#canvas.height);
+    return Buffer.from(
+      '<?xml version="1.0" encoding="utf-8"?>\n' +
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' +
+        width +
+        '" height="' +
+        height +
+        '" viewBox="0 0 ' +
+        width +
+        " " +
+        height +
+        '">' +
+        '<image width="' +
+        width +
+        '" height="' +
+        height +
+        '" xlink:href="data:image/png;base64,' +
+        png.toString("base64") +
+        '"/></svg>\n',
+    );
   }
 
   async #export<T>(operation: () => Promise<T>): Promise<T> {

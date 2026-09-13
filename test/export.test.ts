@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
+import { Canvas, loadImage } from "skia-canvas";
 
 import {
   type RasterFormat,
@@ -158,6 +159,50 @@ describe("canvas export", () => {
 
     expect(secondPng).toEqual(firstPng);
     expect(secondSvg).toEqual(firstSvg);
+  });
+
+  it("preserves filtered drawings in SVG buffers, files and data URLs", async () => {
+    const directory = await temporaryDirectory();
+    const space = new SkiaCanvasSpace(12, 8, { background: "#ffffff" });
+    const image = new Canvas(4, 4);
+    image.getContext("2d").fillStyle = "#ff0000";
+    image.getContext("2d").fillRect(0, 0, 4, 4);
+    space.skiaCtx.save();
+    space.skiaCtx.filter = "brightness(50%)";
+    space.getForm().image([2, 2], image);
+    space.skiaCtx.restore();
+    expect(space.skiaCtx.filter).toBe("none");
+    expect(space.svgRasterFallback).toBe(true);
+    const png = await space.toBuffer("png");
+    const svg = await space.toBuffer("svg", { outline: true });
+    const embedded = /data:image\/png;base64,([^"\s]+)/.exec(
+      svg.toString(),
+    )?.[1];
+    expect(Buffer.from(embedded ?? "", "base64")).toEqual(png);
+    // Decode the SVG itself, not just its envelope, to catch missing image data.
+    const decoded = await loadImage(svg);
+    const canvas = new Canvas(12, 8);
+    canvas.getContext("2d").drawImage(decoded, 0, 0);
+    const pixels = await canvas.toBuffer("raw");
+    expect(pixelAt(pixels, 12, 3, 3)).toEqual([128, 0, 0, 255]);
+    const filename = join(directory, "filtered.svg");
+    await space.toFile(filename);
+    expect(await readFile(filename)).toEqual(svg);
+    const url = await space.toURL("svg");
+    expect(Buffer.from(url.split(",")[1] ?? "", "base64")).toEqual(svg);
+    expect(await space.toBuffer("png")).toEqual(png);
+    space.dispose();
+  });
+
+  it("keeps unfiltered SVG vector output", async () => {
+    const space = new SkiaCanvasSpace(10, 10);
+    space.skiaCtx.filter = "none";
+    space.getForm().fillOnly("#ff0000").point([5, 5], 2);
+    const svg = (await space.toBuffer("svg")).toString();
+    expect(space.svgRasterFallback).toBe(false);
+    expect(svg).toContain("<path");
+    expect(svg).not.toContain("data:image/png");
+    space.dispose();
   });
 
   it("validates output formats and options", async () => {

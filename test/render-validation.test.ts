@@ -1,12 +1,48 @@
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { prepareRenderRequest } from "../src/renderValidation.js";
+import {
+  isURLReference,
+  prepareRenderRequest,
+} from "../src/renderValidation.js";
 
 const source = resolve("test/fixtures/scenes/portable-card.mjs");
 
 describe("render request validation", () => {
+  it.each([
+    "C:\\project\\scene.mjs",
+    "C:/project/scene.mjs",
+    "D:scene.mjs",
+    "\\\\server\\share\\scene.mjs",
+    "./scene.mjs",
+  ])("recognizes filesystem path %s", (path) => {
+    expect(isURLReference(path)).toBe(false);
+  });
+
+  it.each([
+    "file:///C:/project/scene.mjs",
+    "https://example.com/assets/",
+    "data:image/png;base64,AA==",
+  ])("recognizes URL %s", (url) => {
+    expect(isURLReference(url)).toBe(true);
+  });
+
+  it("resolves native absolute source, output, asset and font paths", async () => {
+    const assetRoot = resolve("test/fixtures/assets");
+    const font = resolve("test/fixtures/assets/font.ttf");
+    const output = resolve("out/card.png");
+    const request = await prepareRenderRequest(source, {
+      assetRoot,
+      fonts: [{ family: "Fixture", sources: [font] }],
+      outputs: [{ path: output, format: "png" }],
+    });
+    expect(request.source).toBe(source);
+    expect(request.assetRoot).toBe(pathToFileURL(assetRoot).href);
+    expect(request.fonts[0]?.sources).toEqual([pathToFileURL(font).href]);
+    expect(request.outputs[0]?.destination).toBe(output);
+  });
   it("snapshots defaults, params, events, and canonical formats", async () => {
     const params = { radius: 10 };
     const request = await prepareRenderRequest(source, {

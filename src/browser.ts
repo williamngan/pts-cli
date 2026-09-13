@@ -548,18 +548,24 @@ export async function mountScene(
 
   let cleanup: SceneCleanup | undefined;
   let assets: BrowserSceneAssets | undefined;
+  let cleanupPromise: Promise<void> | undefined;
+  const runCleanup = (): Promise<void> | undefined => {
+    if (cleanup !== undefined && cleanupPromise === undefined) {
+      const callback = cleanup;
+      cleanupPromise = Promise.resolve().then(callback);
+    }
+    return cleanupPromise;
+  };
   let disposePromise: Promise<void> | undefined;
   const dispose = (): Promise<void> => {
     disposePromise ??= (async () => {
       controller.abort();
       options.signal?.removeEventListener("abort", externalAbort);
       let cleanupError: unknown;
-      if (cleanup) {
-        try {
-          await cleanup();
-        } catch (error) {
-          cleanupError = error;
-        }
+      try {
+        await runCleanup();
+      } catch (error) {
+        cleanupError = error;
       }
       assets?.dispose();
       space.dispose();
@@ -608,6 +614,9 @@ export async function mountScene(
       warnings.push(warning);
       options.onWarning?.(warning);
     }
+    if (controller.signal.aborted) {
+      throw new DOMException("Scene mount was aborted", "AbortError");
+    }
     assets = new BrowserSceneAssets(baseURL, controller.signal);
     const form = space.getForm();
 
@@ -624,6 +633,16 @@ export async function mountScene(
         throw new TypeError("run must return undefined or a cleanup function");
       }
       if (typeof result === "function") cleanup = result;
+      // Abort may already have disposed the canvas while run was awaiting
+      // user work. Honor its eventual cleanup without invoking it twice.
+      if (controller.signal.aborted) {
+        try {
+          await runCleanup();
+        } catch {
+          /* Preserve the abort failure. */
+        }
+        throw new DOMException("Scene mount was aborted", "AbortError");
+      }
       await assets?.settle();
       if (controller.signal.aborted) {
         throw new DOMException("Scene mount was aborted", "AbortError");

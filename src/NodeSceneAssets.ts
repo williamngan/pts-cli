@@ -399,6 +399,7 @@ export class NodeSceneAssets implements PtsSceneAssets {
           signal: this.#signal,
         });
         if (response.status >= 300 && response.status < 400) {
+          await response.body?.cancel();
           const location = response.headers.get("location");
           if (!location)
             throw new Error("Network redirect has no Location header");
@@ -409,6 +410,7 @@ export class NodeSceneAssets implements PtsSceneAssets {
           continue;
         }
         if (!response.ok) {
+          await response.body?.cancel();
           throw new Error(
             "Asset request failed with HTTP " + String(response.status),
           );
@@ -417,6 +419,7 @@ export class NodeSceneAssets implements PtsSceneAssets {
         if (declaredLength !== null) {
           const size = Number(declaredLength);
           if (Number.isFinite(size) && size > this.#limits.maxAssetBytes) {
+            await response.body?.cancel();
             throw new PtsRenderError(
               "ASSET_LIMIT",
               "setup",
@@ -429,25 +432,33 @@ export class NodeSceneAssets implements PtsSceneAssets {
         const chunks: Buffer[] = [];
         let bytes = 0;
         const reader = response.body.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const buffer = Buffer.from(value);
-          bytes += buffer.length;
-          if (bytes > this.#limits.maxAssetBytes) {
-            throw new PtsRenderError(
-              "ASSET_LIMIT",
-              "setup",
-              "Asset exceeds limits.maxAssetBytes: " + this.#displayURL(url),
-            );
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const buffer = Buffer.from(value);
+            bytes += buffer.length;
+            if (bytes > this.#limits.maxAssetBytes) {
+              throw new PtsRenderError(
+                "ASSET_LIMIT",
+                "setup",
+                "Asset exceeds limits.maxAssetBytes: " + this.#displayURL(url),
+              );
+            }
+            chunks.push(buffer);
           }
-          chunks.push(buffer);
+        } finally {
+          // Release rejected/aborted bodies as well as completed streams so a
+          // size limit does not leave the connection downloading in the worker.
+          await reader.cancel().catch(() => undefined);
+          reader.releaseLock();
         }
         this.#accountBytes(bytes, this.#displayURL(url));
         return Buffer.concat(chunks, bytes);
       }
       throw new Error("Unreachable redirect state");
     } catch (error) {
+      this.#throwIfAborted();
       if (error instanceof PtsRenderError) throw error;
       throw new PtsRenderError(
         "ASSET_NOT_FOUND",

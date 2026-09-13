@@ -7,6 +7,7 @@ export interface SourceAnalysis {
   readonly hasCommonJsExport: boolean;
   readonly hasModuleSyntax: boolean;
   readonly ptsRuntimeReferences: readonly string[];
+  readonly ptsCommonJsReferences: readonly string[];
 }
 
 type AstRecord = Record<string, unknown> & { readonly type: string };
@@ -121,6 +122,7 @@ export function analyzeJavaScriptSource(
   const ast = parseSource(source, sourcePath);
   const classicMarkers = new Set<string>();
   const ptsRuntimeReferences = new Set<string>();
+  const ptsCommonJsReferences = new Set<string>();
   let hasModuleSyntax = false;
   let hasCommonJsExport = false;
 
@@ -161,7 +163,10 @@ export function analyzeJavaScriptSource(
         const argumentsValue = node.arguments;
         if (Array.isArray(argumentsValue)) {
           const specifier = literalString(argumentsValue[0]);
-          if (isPtsSpecifier(specifier)) ptsRuntimeReferences.add(specifier);
+          if (isPtsSpecifier(specifier)) {
+            ptsRuntimeReferences.add(specifier);
+            ptsCommonJsReferences.add(specifier);
+          }
         }
       }
     }
@@ -191,6 +196,7 @@ export function analyzeJavaScriptSource(
     hasCommonJsExport,
     hasModuleSyntax,
     ptsRuntimeReferences: Object.freeze([...ptsRuntimeReferences]),
+    ptsCommonJsReferences: Object.freeze([...ptsCommonJsReferences]),
   };
 }
 

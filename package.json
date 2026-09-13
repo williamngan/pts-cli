@@ -14,7 +14,6 @@
   "homepage": "https://github.com/williamngan/pts-cli#readme",
   "type": "module",
   "sideEffects": false,
-  "private": true,
   "bin": {
     "ptsjs": "./dist/cli.mjs"
   },
@@ -76,15 +75,18 @@
   "packageManager": "pnpm@11.21.0",
   "scripts": {
     "build": "tsdown",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:browser && pnpm test:integration && pnpm test:types && pnpm test:pack && pnpm package:check",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm test:browser && pnpm test:integration && pnpm test:compatibility && pnpm test:types && pnpm test:pack && pnpm package:check",
     "example": "pnpm build && node scripts/render-example.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "package:check": "publint && attw --pack .",
-    "test": "vitest run",
+    "prepack": "npm run build",
+    "prepublishOnly": "pnpm check",
+    "test": "pnpm build && vitest run",
     "test:browser": "node scripts/test-browser.mjs",
     "test:compatibility": "node scripts/test-compatibility.mjs",
+    "test:coverage": "pnpm build && vitest run --coverage",
     "test:integration": "node scripts/test-cli.mjs",
     "test:pack": "node scripts/test-packed.mjs",
     "test:types": "tsc -p test/fixtures/strict-types/tsconfig.nodenext.json && tsc -p test/fixtures/strict-types/tsconfig.node16.json",
@@ -92,7 +94,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "pts": "github:williamngan/pts#revamp"
+    "pts": "^1.0.0"
   },
   "dependencies": {
     "acorn": "8.18.0",
@@ -102,11 +104,13 @@
     "@arethetypeswrong/cli": "0.18.5",
     "@eslint/js": "10.0.1",
     "@types/node": "24.5.2",
+    "@vitest/coverage-v8": "4.1.10",
+    "cross-spawn": "7.0.6",
     "eslint": "10.8.1",
     "globals": "17.9.0",
     "playwright": "1.62.1",
     "prettier": "3.9.6",
-    "pts": "github:williamngan/pts#revamp",
+    "pts": "1.0.0",
     "publint": "0.3.23",
     "tsdown": "0.22.14",
     "typescript": "5.9.3",

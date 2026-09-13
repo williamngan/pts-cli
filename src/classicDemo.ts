@@ -450,6 +450,13 @@ export async function executeClassicDemo(
   CanvasSpaceFacade.prototype = Object.getPrototypeOf(space) as object;
 
   const facade: Record<string, unknown> = { ...Pts };
+  // Pts's browser helper reads its own realm's navigator, which Node 20 lacks.
+  // This renderer is never a mobile browser; leave the real Pts class untouched.
+  facade.Util = class extends Pts.Util {
+    static override isMobile(): boolean {
+      return false;
+    }
+  };
   facade.CanvasSpace = CanvasSpaceFacade;
   facade.HTMLSpace = unsupportedAPI("HTMLSpace");
   facade.HTMLForm = unsupportedAPI("HTMLForm");

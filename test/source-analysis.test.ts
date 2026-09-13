@@ -61,6 +61,7 @@ describe("source loader analysis", () => {
       "pts",
       "pts/dist/index.mjs",
     ]);
+    expect(analysis.ptsCommonJsReferences).toEqual(["pts"]);
   });
 
   it("recognizes CommonJS scenes and rejects genuinely ambiguous sources", () => {

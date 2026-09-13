@@ -194,7 +194,7 @@
 
       .start-grid {
         display: grid;
-        align-items: center;
+        align-items: start;
         gap: 22px;
         grid-template-columns: minmax(0, 1.16fr) minmax(360px, 0.84fr);
         margin-top: 52px;
@@ -210,6 +210,7 @@
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.2);
         background: var(--navy-dark);
+        padding-bottom: 30px;
       }
 
       .panel-head {
@@ -219,7 +220,6 @@
         justify-content: space-between;
         gap: 20px;
         padding: 0 13px 0 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.13);
         color: rgba(255, 255, 255, 0.56);
         font-family: var(--mono);
         font-size: 10px;
@@ -275,7 +275,6 @@
 
       .output-preview figcaption {
         padding: 13px 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.13);
         color: rgba(255, 255, 255, 0.56);
         font-size: 11px;
       }
@@ -594,73 +593,106 @@
 
           <div class="start-grid">
             <article class="terminal">
-              <div class="panel-head">
-                <span>Render a file</span>
-                <button
-                  class="copy-button"
-                  type="button"
-                  data-copy-target="startCode"
-                  aria-label="Copy render command"
-                >
-                  Copy
-                </button>
-              </div>
               <pre
                 tabindex="0"
-              ><code id="startCode"><span class="prompt">$</span> npx pts-cli circle.mjs
+              ><code id="startCode"><span class="prompt">$</span> npx pts-cli interpolate.mjs
 
-<span class="output-path">pts-output/circle-&lt;render-id&gt;.png</span></code></pre>
-            </article>
-
-            <figure class="output-preview">
-              <div class="panel-head">Example output</div>
+<span class="output-path">pts-output/interpolate-&lt;render-id&gt;.png</span></code></pre>
               <svg
                 role="img"
                 aria-labelledby="previewTitle previewDesc"
-                viewBox="0 0 520 320"
+                viewBox="0 0 800 600"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <title id="previewTitle">Example Pts render</title>
+                <title id="previewTitle">Geom.interpolate example output</title>
                 <desc id="previewDesc">
-                  A violet ring and white geometry on a navy field.
+                  Nested white and navy squares twist inward on a transparent
+                  background.
                 </desc>
-                <rect width="520" height="320" fill="#0b1f2e" />
-                <circle
-                  cx="260"
-                  cy="152"
-                  r="92"
-                  fill="none"
-                  stroke="#7566ff"
-                  stroke-width="34"
-                />
-                <circle
-                  cx="260"
-                  cy="152"
-                  r="51"
-                  fill="none"
-                  stroke="#ffffff"
-                  stroke-opacity=".28"
-                  stroke-width="2"
+                <path fill="white" d="M190 0L700 90L610 600L100 510L190 0Z" />
+                <path
+                  fill="#123"
+                  d="M276.70001 15.3L684.70001 176.7L523.29999 584.70001L115.3 423.29999L276.70001 15.3Z"
                 />
                 <path
-                  d="M52 61 178 118M468 61 342 118M51 254 180 196M469 254 340 196"
-                  stroke="#ffffff"
-                  stroke-opacity=".32"
-                  stroke-width="2"
+                  fill="white"
+                  d="M354.22 45.966L654.034 254.22L445.78 554.034L145.966 345.78L354.22 45.966Z"
                 />
-                <rect x="256" y="148" width="8" height="8" fill="#ffffff" />
-                <text
-                  x="28"
-                  y="294"
-                  fill="#ffffff"
-                  font-family="system-ui, sans-serif"
-                  font-size="17"
-                >
-                  Pts CLI
-                </text>
+                <path
+                  fill="#123"
+                  d="M417.18094 89.699341L610.30066 317.18094L382.81906 510.30066L189.69934 282.81906L417.18094 89.699341Z"
+                />
+                <path
+                  fill="white"
+                  d="M461.59848 142.02011L557.97992 361.59848L338.40152 457.97989L242.02011 238.40152L461.59848 142.02011Z"
+                />
+                <path
+                  fill="#123"
+                  d="M485.69385 196.9147L503.08533 385.69385L314.30615 403.0853L296.9147 214.30617L485.69385 196.9147Z"
+                />
+                <path
+                  fill="white"
+                  d="M490.38956 247.88507L452.11496 390.38953L309.61047 352.11493L347.88507 209.61047L490.38956 247.88507Z"
+                />
+                <path
+                  fill="#123"
+                  d="M479.28992 289.21136L410.78867 379.28989L320.71011 310.78864L389.21136 220.71011L479.28992 289.21136Z"
+                />
+                <path
+                  fill="white"
+                  d="M458.05453 317.13571L382.86432 358.0545L341.9455 282.86429L417.13571 241.9455L458.05453 317.13571Z"
+                />
+                <path
+                  fill="#123"
+                  d="M433.24176 330.63892L369.36111 333.24173L366.75827 269.36108L430.63892 266.75827L433.24176 330.63892Z"
+                />
+                <path
+                  fill="white"
+                  d="M410.88354 331.5499L368.45013 310.88351L389.11649 268.4501L431.54993 289.11649L410.88354 331.5499Z"
+                />
+                <path
+                  fill="#123"
+                  d="M395.1832 323.90332L376.09668 295.18317L404.81686 276.09668L423.90335 304.81683L395.1832 323.90332Z"
+                />
+                <path
+                  fill="white"
+                  d="M387.73944 312.70245L387.29755 287.73944L412.26059 287.29755L412.70248 312.26056L387.73944 312.70245Z"
+                />
+                <path
+                  fill="#123"
+                  d="M387.55826 302.46762L397.53238 287.55826L412.44177 297.53238L402.46765 312.44174L387.55826 302.46762Z"
+                />
+                <path
+                  fill="white"
+                  d="M391.84714 296.05658L403.94342 291.84714L408.15289 303.94342L396.05661 308.15286L391.84714 296.05658Z"
+                />
+                <path
+                  fill="#123"
+                  d="M397.29047 294.16232L405.83768 297.29047L402.70956 305.83768L394.16235 302.70953L397.29047 294.16232Z"
+                />
+                <path
+                  fill="white"
+                  d="M401.30765 295.63254L404.36746 301.30765L398.69238 304.36746L395.63257 298.69235L401.30765 295.63254Z"
+                />
+                <path
+                  fill="#123"
+                  d="M402.80695 298.41333L401.58667 302.80695L397.19308 301.58667L398.41336 297.19305L402.80695 298.41333Z"
+                />
+                <path
+                  fill="white"
+                  d="M402.1846 300.65408L399.34595 302.1846L397.81543 299.34592L400.65408 297.8154L402.1846 300.65408Z"
+                />
+                <path
+                  fill="#123"
+                  d="M400.68011 301.46527L398.53476 300.68008L399.31992 298.53473L401.46527 299.31992L400.68011 301.46527Z"
+                />
+                <path
+                  fill="white"
+                  d="M399.50018 301.03342L398.96658 299.50015L400.49985 298.96658L401.03345 300.49985L399.50018 301.03342Z"
+                />
               </svg>
-              <figcaption>Output from the command above.</figcaption>
-            </figure>
+            </article>
+
           </div>
         </div>
       </section>
@@ -677,7 +709,7 @@
           <div class="scene-grid">
             <article class="code-panel">
               <div class="panel-head">
-                <span>circle.mjs</span>
+                <span>interpolate.mjs</span>
                 <button
                   class="copy-button"
                   type="button"
@@ -691,17 +723,26 @@
                 class="source-code"
                 tabindex="0"
               ><code id="sceneCode"><span class="tok-key">export default function</span> <span class="tok-function">run</span>({ Pts, space, form }) {
-  <span class="tok-key">const</span> { Circle } = Pts;
+  <span class="tok-key">const</span> { Geom, Num, Rectangle } = Pts;
+
+  <span class="tok-key">function</span> <span class="tok-function">interpolate</span>(points, t, depth = <span class="tok-number">0</span>) {
+    <span class="tok-key">if</span> (depth &gt; <span class="tok-number">20</span>) <span class="tok-key">return</span>;
+    t = Num.<span class="tok-function">boundValue</span>(t, <span class="tok-number">0</span>, <span class="tok-number">1</span>);
+    <span class="tok-key">const</span> next = points.<span class="tok-function">map</span>((p, i) =&gt;
+      Geom.<span class="tok-function">interpolate</span>(p, points[(i + <span class="tok-number">1</span>) % points.length], t),
+    );
+    form.<span class="tok-function">fillOnly</span>(depth % <span class="tok-number">2</span> === <span class="tok-number">0</span> ? <span class="tok-string">"#fff"</span> : <span class="tok-string">"#123"</span>).<span class="tok-function">polygon</span>(next);
+    <span class="tok-function">interpolate</span>(next, t + <span class="tok-number">0.02</span>, depth + <span class="tok-number">1</span>);
+  }
 
   space.<span class="tok-function">add</span>(() =&gt; {
-    form
-      .<span class="tok-function">fillOnly</span>(<span class="tok-string">"#7566ff"</span>)
-      .<span class="tok-function">circle</span>(
-        Circle.<span class="tok-function">fromCenter</span>(
-          space.pointer,
-          <span class="tok-number">48</span>
-        )
-      );
+    <span class="tok-key">const</span> size = space.size.<span class="tok-function">$multiply</span>(<span class="tok-number">0.5</span>).<span class="tok-function">minValue</span>().value;
+    <span class="tok-key">const</span> rect = Rectangle.<span class="tok-function">corners</span>([
+      space.center.<span class="tok-function">$subtract</span>(size),
+      space.center.<span class="tok-function">$add</span>(size),
+    ]);
+    <span class="tok-key">const</span> t = <span class="tok-number">0.15</span>;
+    <span class="tok-function">interpolate</span>(rect, t);
   });
 }</code></pre>
             </article>
@@ -712,13 +753,12 @@
                 <pre
                   class="usage-code"
                   tabindex="0"
-                ><code>npx pts-cli circle.mjs \
-  --out circle.png \
-  --out circle.svg
+                ><code>npx pts-cli interpolate.mjs \
+  --out interpolate.png \
+  --out interpolate.svg
 
-npx pts-cli circle.mjs \
+npx pts-cli interpolate.mjs \
   --size 1200x630 \
-  --background "#10283a" \
   --out card.png</code></pre>
                 <p>
                   Size and background are optional. They default to 800 × 600
@@ -733,7 +773,7 @@ npx pts-cli circle.mjs \
                   tabindex="0"
                 ><code><span class="tok-key">import</span> { mountScene } <span class="tok-key">from</span>
   <span class="tok-string">"pts-cli/browser"</span>;
-<span class="tok-key">import</span> run <span class="tok-key">from</span> <span class="tok-string">"./circle.mjs"</span>;
+<span class="tok-key">import</span> run <span class="tok-key">from</span> <span class="tok-string">"./interpolate.mjs"</span>;
 
 <span class="tok-key">await</span> <span class="tok-function">mountScene</span>(run, {
   target: <span class="tok-string">"#pt"</span>

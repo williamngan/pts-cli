@@ -1,4 +1,3 @@
-import { execFile } from "node:child_process";
 import {
   cp,
   mkdtemp,
@@ -6,7 +5,6 @@ import {
   readFile,
   readdir,
   realpath,
-  rename,
   rm,
   stat,
   symlink,
@@ -14,34 +12,74 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { promisify } from "node:util";
-
-const execute = promisify(execFile);
+import { execute } from "./execute.mjs";
 const temporary = await mkdtemp(join(tmpdir(), "skia-pts-package-"));
 
 try {
-  await execute("pnpm", ["pack", "--pack-destination", temporary], {
-    cwd: resolve("."),
+  // Start from source only: prepack must create every executable and export.
+  const clean = join(temporary, "clean-source");
+  await mkdir(clean);
+  for (const name of [
+    "src",
+    "compatibility",
+    "package.json",
+    "tsconfig.json",
+    "tsdown.config.mts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+  ]) {
+    await cp(resolve(name), join(clean, name), { recursive: true });
+  }
+  await symlink(
+    await realpath(resolve("node_modules")),
+    join(clean, "node_modules"),
+    "junction",
+  );
+  await execute("npm", ["pack", "--pack-destination", temporary], {
+    cwd: clean,
   });
 
   const tarballName = (await readdir(temporary)).find((name) =>
     name.endsWith(".tgz"),
   );
-  if (!tarballName) throw new Error("pnpm pack did not create a tarball");
+  if (!tarballName) throw new Error("npm pack did not create a tarball");
 
-  const modules = join(temporary, "node_modules");
-  await mkdir(modules);
-  await execute("tar", ["-xzf", join(temporary, tarballName), "-C", modules], {
-    cwd: temporary,
-  });
-  await rename(join(modules, "package"), join(modules, "pts-cli"));
-
-  for (const dependency of ["acorn", "pts", "skia-canvas"]) {
-    const target = await realpath(resolve("node_modules", dependency));
-    await symlink(target, join(modules, dependency), "junction");
+  // Exercise npm peer resolution, native installation and executable linking.
+  const consumer = join(temporary, "consumer");
+  await mkdir(consumer);
+  await writeFile(
+    join(consumer, "package.json"),
+    JSON.stringify({ name: "pts-cli-consumer", private: true }),
+  );
+  await execute(
+    "npm",
+    [
+      "install",
+      "--no-audit",
+      "--no-fund",
+      ...(process.env.SANDBOX_OFFLINE === "1" ? ["--offline"] : []),
+      join(temporary, tarballName),
+    ],
+    { cwd: consumer },
+  );
+  const modules = join(consumer, "node_modules");
+  const lock = JSON.parse(
+    await readFile(join(consumer, "package-lock.json"), "utf8"),
+  );
+  const installedPts = lock.packages["node_modules/pts"];
+  if (
+    !installedPts ||
+    !installedPts.version.startsWith("1.") ||
+    !installedPts.resolved?.startsWith("https://registry.npmjs.org/pts/-/pts-")
+  ) {
+    throw new Error(
+      "The consumer did not resolve Pts from the npm 1.x release line",
+    );
   }
+  await execute("npm", ["ls", "pts"], { cwd: consumer });
 
-  const scenePath = join(temporary, "packed-scene.mjs");
+  const scenePath = join(consumer, "packed-scene.mjs");
   await writeFile(
     scenePath,
     [
@@ -54,7 +92,7 @@ try {
     ].join("\n"),
   );
 
-  const dedupedScenePath = join(temporary, "deduped-scene.mjs");
+  const dedupedScenePath = join(consumer, "deduped-scene.mjs");
   await writeFile(
     dedupedScenePath,
     [
@@ -71,11 +109,9 @@ try {
   const foreignDirectory = join(temporary, "foreign-project");
   const foreignModules = join(foreignDirectory, "node_modules");
   await mkdir(foreignModules, { recursive: true });
-  await cp(
-    await realpath(resolve("node_modules/pts")),
-    join(foreignModules, "pts"),
-    { recursive: true },
-  );
+  await cp(join(modules, "pts"), join(foreignModules, "pts"), {
+    recursive: true,
+  });
   const foreignScenePath = join(foreignDirectory, "foreign-scene.mjs");
   await writeFile(
     foreignScenePath,
@@ -121,17 +157,31 @@ try {
   ].join("\n");
 
   await execute(process.execPath, ["--input-type=module", "--eval", esm], {
-    cwd: temporary,
+    cwd: consumer,
   });
   await execute(process.execPath, ["--eval", commonjs], {
-    cwd: temporary,
+    cwd: consumer,
   });
 
   const bin = join(modules, "pts-cli", "dist", "cli.mjs");
-  if (((await stat(bin)).mode & 0o111) === 0) {
+  if (process.platform !== "win32" && ((await stat(bin)).mode & 0o111) === 0) {
     throw new Error("ptsjs bin is not executable");
   }
   await stat(join(modules, "pts-cli", "compatibility", "pts-revamp.json"));
+  const installedBin = join(
+    modules,
+    ".bin",
+    process.platform === "win32" ? "ptsjs.cmd" : "ptsjs",
+  );
+  const version = await execute(installedBin, ["--version"], { cwd: consumer });
+  const metadata = JSON.parse(
+    await readFile(join(modules, "pts-cli", "package.json"), "utf8"),
+  );
+  if (version.stdout.trim() !== metadata.version)
+    throw new Error(
+      "Installed executable version does not match package metadata",
+    );
+  if (metadata.private) throw new Error("Release package is still private");
   const help = await execute(process.execPath, [bin, "--help"], {
     cwd: temporary,
   });

@@ -15,16 +15,14 @@ Pts itself is never patched. All Node integration lives in this repository.
 
 ## Status
 
-This is an implementation-stage, private `0.1.0` package. The intended package
+This is the `0.1.0` release candidate for published **Pts 1.0.0**. The package
 name is `pts-cli`; the executable is `ptsjs`. Keeping the command slightly more
 specific avoids likely collisions around a generic `pts` executable.
 
-The authoritative Pts baseline is the latest local committed `revamp` snapshot,
-currently `7031a246c6870b8175160e62baf1193967d029c9`, not the older npm
-implementation. The normal lockfile still resolves an earlier revamp commit;
-publication remains blocked until the reviewed revision or a distinct revamp
-release can be installed reproducibly. The compatibility suite is commit- and
-source-hash-pinned to the intended snapshot.
+Node.js 20 or later is required. Pts is an unbundled `^1.0.0` peer; development
+and compatibility verification pin npm `pts@1.0.0` exactly. The upstream source
+baseline is release commit `034e5f6ac8bcf54d2121ef88799ac43fc4b2c827`.
+Installation no longer depends on a Git branch or an unpublished Pts checkout.
 
 ## Why skia-canvas
 
@@ -43,6 +41,10 @@ pixels can vary across platforms; and it does not make DOM, audio, microphone,
 browser events, or HTMLSpace meaningful in Node. Its SVG is a recording of
 Canvas drawing commands, not a semantic Pts SVGSpace scene graph. Those cases
 are reported explicitly.
+
+The skia-canvas install script downloads its native binary (or compiles it when
+needed). If your package manager blocks dependency lifecycle scripts, explicitly
+approve skia-canvas's installer before rendering.
 
 ## Command line
 
@@ -69,7 +71,7 @@ ptsjs drawing.mjs
 ### From this checkout
 
 ```sh
-pnpm install
+pnpm install --frozen-lockfile
 pnpm build
 
 node dist/cli.mjs examples/basic-card.mjs \
@@ -195,18 +197,19 @@ classic loader only for strong markers such as `Pts.quickStart`,
 module exports and classic markers is rejected as ambiguous; choose
 `--loader scene` or `--loader pts-demo` explicitly.
 
-Classic support is manifest-based, not a blanket “all demos” claim. At Pts
-revision `7031a24…`, the checked matrix currently contains:
+Classic support is manifest-based, not a blanket “all demos” claim. For Pts
+1.0.0, the checked matrix contains:
 
-- 18 supported demos;
-- 3 supported-with-input demos;
+- 17 supported demos;
+- 4 supported-with-input demos;
 - 1 partial editable/pixel Img demo; and
 - 4 browser-only/audio demos marked not applicable.
 
 The supported set covers geometry, gradients, text, compositing, resize,
 actions, Tempo, physics, UI, direct CanvasSpace construction, non-editable image
-loading, and image patterns. Every source is SHA-256 pinned and every supported
-entry produces both PNG and SVG. See
+loading, and image patterns. Every source and image asset is SHA-256 pinned;
+every supported entry produces both PNG and SVG with visible content. The
+filtered-image demo uses the explicit SVG raster fallback described below. See
 [`compatibility/pts-revamp.json`](compatibility/pts-revamp.json).
 
 Root-relative legacy image paths require an explicit root instead of guessing
@@ -377,7 +380,7 @@ Failures use
 `{ "ok": false, "error": { "code", "phase", "message", "cause"? } }` and retain
 a bounded cause chain without stacks by default. `--debug` adds worker and cause
 stacks. Exit groups are stable: 2 for usage/validation, 3 for source or
-compatibility, 4 for render-file initialization/input/frame, 5 for
+compatibility, 4 for render-file initialization/input/frame/cleanup, 5 for
 export/commit, 6 for native/environment, 124 for timeout, and 130 for SIGINT.
 `--json` cannot be combined with `--out -`.
 
@@ -405,17 +408,24 @@ const png = result.outputs[0].buffer;
 ```
 
 Each call starts a fresh worker. Outputs are encoded in request order from the
-same final canvas. Path outputs are verified and committed atomically; omitted
-paths become bounded Buffers in the parent. The result includes dimensions,
-clock facts, random facts, renderer facts, warnings, hashes, captured logs, and
-optional scene metadata.
+same final canvas. All artifacts and Buffer limits are verified before any path
+is committed. Each path commit is atomic, but multiple paths are not a single
+filesystem transaction: a later commit failure reports already committed paths
+in the error details. Omitted paths become bounded Buffers in the parent. The
+result includes dimensions, clock facts, random facts, renderer facts, warnings,
+hashes, captured logs, and optional scene metadata.
 
 Render files must have a default export containing either a `run` function or a
 configured object with a `run` property. `.mjs`, package-appropriate `.js`, and
-`.cjs` (`module.exports` or `exports.default`) are supported. Direct runtime
-imports from `pts` are allowed only when they resolve to the runner's exact peer
-installation; otherwise rendering fails with `PTS_INSTANCE_MISMATCH`. Using
-`context.Pts` avoids that package-manager edge case.
+`.cjs` (`module.exports` or `exports.default`) are supported. Direct ESM imports
+from `pts` must resolve to the runner's exact peer installation and module
+instance; otherwise rendering fails with `PTS_INSTANCE_MISMATCH`. A scene's
+`require("pts")` selects Pts's separate CommonJS implementation and is rejected,
+even from the same installation, because it would split Pts state and seeded
+randomness. CommonJS scenes should use `context.Pts` or `await import("pts")`.
+Avoid separate Pts bundles or transitive dependencies that introduce another Pts
+instance; the preflight checks direct literal references, not an arbitrary
+dependency graph. Using `context.Pts` is the simplest portable choice.
 
 ## Assets and fonts
 
@@ -469,9 +479,20 @@ const svg = await space.toBuffer("svg", { outline: true });
 
 In the CLI/API, `textMode: "preserve"` retains text where Skia can do so;
 `"outline"` converts glyphs to paths for more self-contained geometry. Embedded
-raster images remain raster data inside the SVG. Filters, compositing, text,
-fonts, and backend details can differ from a browser Canvas implementation, so
-visual compatibility is tested semantically rather than by byte equality.
+raster images remain raster data inside the SVG.
+
+Skia's SVG encoder omits Canvas-filtered drawing commands. If a scene sets a
+non-`none` Canvas `filter`, the adapter preserves the complete drawing by
+embedding a PNG snapshot in the SVG at logical resolution (density `1`). The
+CLI/API reports `SVG_RASTER_FALLBACK`; the low-level adapter exposes
+`space.svgRasterFallback`. All content, including text, is rasterized in this
+case regardless of `textMode`. Unfiltered scenes retain normal vector SVG
+output. This conservative fallback remains enabled for the canvas lifetime, even
+if the scene later resets the filter.
+
+Filters, compositing, text, fonts, and backend details can differ from a browser
+Canvas implementation, so visual compatibility is tested semantically rather
+than by byte equality.
 
 ## Low-level adapter
 
@@ -530,30 +551,52 @@ paths because output policy remains in the parent process.
 pnpm check
 ```
 
-The normal suite covers unit rendering, lifecycle and input semantics, SVG,
-browser mounting in Chromium, CLI black-box behavior, strict consumer types,
-packed ESM/CommonJS consumers, duplicate-Pts rejection, executable permissions,
-and package metadata.
+The release gate includes formatting, lint, source types, coverage-enforced
+runtime tests, real Chromium mounting/abort/image tests, CLI black-box tests,
+all 26 compatibility cases, strict Node16/NodeNext consumer types, a
+clean-source package build and fresh npm consumer install, and package/export
+validation. The packed consumer installs the registry peer and native runtime
+dependencies without borrowing development symlinks.
 
-The exact local Pts snapshot can be checked without modifying it:
+`pnpm test:coverage` writes HTML and JSON reports to `coverage/`. Its thresholds
+are 82% lines, 80% statements, 85% functions, and 70% branches for instrumented
+runtime modules. Browser and process entry points are exercised by separate
+end-to-end suites, not included in those percentages.
+
+Compatibility fixtures are vendored unchanged from the exact release source, so
+the compatibility suite needs neither network access nor a neighboring Pts
+checkout. To verify an optional external checkout of the same release:
 
 ```sh
-# node_modules/pts must temporarily resolve to this detached/read-only checkout
 pnpm build
-pnpm test:compatibility /path/to/pts-at-7031a24
+pnpm test:compatibility /path/to/pts-at-034e5f6
 ```
 
 The compatibility verifier checks the commit when Git metadata is present,
-checks every source hash before execution, writes all output to its own
-temporary directory, and compares the Pts checkout's status/diff fingerprints
-before and after.
+checks source and asset hashes, decodes output to verify dimensions and visible
+content, verifies required SVG image content, writes output to its own temporary
+directory, and compares the Pts checkout's status/diff fingerprints before and
+after. The installed runtime remains npm `pts@1.0.0`.
+
+### Publishing checklist
+
+```sh
+pnpm install --frozen-lockfile
+pnpm check
+pnpm audit --prod
+pnpm pack
+```
+
+Require green CI results for Linux, macOS, and Windows on Node 20, 22, and 24
+before publishing. Confirm the package name/version, npm ownership, and release
+notes, then publish from this checkout with `npm publish`. `prepublishOnly`
+reruns `pnpm check`; `prepack` always rebuilds the distributed files, including
+when packing a clean checkout. Browser tests require Chromium; install it with
+`pnpm exec playwright install chromium` if it is not already available. No
+package is published by the verification commands.
 
 ## Current limitations
 
-- The exact latest local revamp commit cannot yet be pinned from the configured
-  public Git source; release remains blocked.
-- The package is private and has not completed hosted native verification on
-  every advertised OS/Node combination.
 - Classic compatibility is manifest-scoped; it is not a DOM emulator.
 - Editable/pixel-oriented legacy Img, offscreen Canvas helpers, HTMLSpace,
   SVGSpace, audio, microphone, video, and arbitrary browser timers are not

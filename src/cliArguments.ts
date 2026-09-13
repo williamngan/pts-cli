@@ -136,6 +136,7 @@ function one(raw: RawArguments, name: string): string | undefined {
 }
 
 function finite(value: string, name: string): number {
+  if (value.trim().length === 0) usage("--" + name + " requires a number");
   const number = Number(value);
   if (!Number.isFinite(number)) usage("--" + name + " must be a finite number");
   return number;
@@ -150,6 +151,7 @@ function positiveInteger(value: string, name: string): number {
 }
 
 function nonNegativeInteger(value: string, name: string): number {
+  if (value.trim().length === 0) usage("--" + name + " requires a number");
   const number = Number(value);
   if (!Number.isSafeInteger(number) || number < 0) {
     usage("--" + name + " must be a non-negative integer");
@@ -237,7 +239,7 @@ async function parseParams(
     unknown
   >;
   const file = one(raw, "params");
-  if (file) {
+  if (file !== undefined) {
     const base = assertPlainObject(
       await readJsonFile(file, maxBytes, "params"),
       "--params",
@@ -271,7 +273,7 @@ async function parseEvents(
   maxBytes: number,
 ): Promise<readonly PtsSceneEvent[] | undefined> {
   const path = one(raw, "events");
-  if (!path) return undefined;
+  if (path === undefined) return undefined;
   const value = await readJsonFile(path, maxBytes, "events");
   if (Array.isArray(value)) return value as PtsSceneEvent[];
   const root = assertPlainObject(value, "--events");

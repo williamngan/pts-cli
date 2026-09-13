@@ -4,11 +4,11 @@ import type { CanvasRenderingContext2D as NativeContext2D } from "skia-canvas";
 
 import { SkiaCanvasError } from "./errors.js";
 
-type RevampCanvasFormConstructor = typeof CanvasForm & {
+type CanvasFormConstructorHooks = typeof CanvasForm & {
   resetStyleCache?: (context: object) => void;
 };
 
-type RevampCanvasFormPrototype = {
+type CanvasFormPrototypeHooks = {
   _set?: (key: string, value: unknown) => void;
 };
 
@@ -23,17 +23,15 @@ export function toPtsContext(context: NativeContext2D): RenderingContext2D {
 }
 
 export function resetPtsStyleCache(context: object): void {
-  const resetStyleCache = (CanvasForm as RevampCanvasFormConstructor)
+  const resetStyleCache = (CanvasForm as CanvasFormConstructorHooks)
     .resetStyleCache;
-  const setStyle = (
-    CanvasForm.prototype as unknown as RevampCanvasFormPrototype
-  )._set;
+  const setStyle = (CanvasForm.prototype as unknown as CanvasFormPrototypeHooks)
+    ._set;
 
   if (typeof resetStyleCache !== "function" || typeof setStyle !== "function") {
     throw new SkiaCanvasError(
       "INCOMPATIBLE_PTS",
-      "pts-cli requires the Pts revamp CanvasForm API; the " +
-        "npm-published pts@0.12.9 implementation is not compatible.",
+      "pts-cli requires the Pts 1.x CanvasForm style-cache API; install pts@^1.0.0.",
     );
   }
 

@@ -1,4 +1,6 @@
 coverage/
 dist/
 node_modules/
+.pnpm-store/
+test/fixtures/pts-1.0.0/
 pnpm-lock.yaml
