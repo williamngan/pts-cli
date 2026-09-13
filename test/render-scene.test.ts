@@ -55,7 +55,7 @@ describe("renderScene worker and artifact lifecycle", () => {
     });
     expect(result.runtime.ptsVersion).toBe("1.0.0");
     expect(result.outputs[0]?.buffer?.readUInt32BE(0)).toBe(0x89504e47);
-    expect(await readFile(path, "utf8")).toContain("Pts CLI");
+    expect(await readFile(path, "utf8")).toContain("Pts Render");
     expect(result.logs.stdout).toContain("portable-card run");
     expect(result.outputs.map((output) => output.sha256)).toEqual([
       expect.stringMatching(/^[a-f0-9]{64}$/),

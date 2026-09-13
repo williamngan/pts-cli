@@ -2,7 +2,7 @@
 
 ## Release baseline
 
-- CLI: `pts-cli@0.1.0` release candidate; executable `ptsjs`.
+- CLI: `pts-render@0.1.0` release candidate; executable `pts-render`.
 - Pts: published npm `1.0.0`, release source commit
   `034e5f6ac8bcf54d2121ef88799ac43fc4b2c827`.
 - Runtime: Node.js 20+, skia-canvas `3.0.8`; unbundled `pts@^1.0.0` peer.

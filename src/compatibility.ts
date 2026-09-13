@@ -31,7 +31,7 @@ export function resetPtsStyleCache(context: object): void {
   if (typeof resetStyleCache !== "function" || typeof setStyle !== "function") {
     throw new SkiaCanvasError(
       "INCOMPATIBLE_PTS",
-      "pts-cli requires the Pts 1.x CanvasForm style-cache API; install pts@^1.0.0.",
+      "pts-render requires the Pts 1.x CanvasForm style-cache API; install pts@^1.0.0.",
     );
   }
 

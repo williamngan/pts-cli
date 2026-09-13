@@ -5,7 +5,7 @@ export default {
     space.add(() => {
       form
         .fillOnly("#123456")
-        .font(16, "normal", "normal", 1.2, "Pts CLI Configured Font")
+        .font(16, "normal", "normal", 1.2, "Pts Render Configured Font")
         .text([5, 24], "portable font");
     });
   },

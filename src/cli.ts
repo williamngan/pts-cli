@@ -6,15 +6,15 @@ import { renderScene } from "./renderScene.js";
 
 const VERSION = "0.1.0";
 
-const HELP = `Pts CLI ${VERSION}
+const HELP = `Pts Render ${VERSION}
 
 Render portable scenes and compatible classic Pts demos to images and SVG.
 
 Usage:
-  ptsjs <source> [--out <destination>] [options]
-  ptsjs render <source> [--out <destination>] [options]  (explicit form)
-  ptsjs --help
-  ptsjs --version
+  pts-render <source> [--out <destination>] [options]
+  pts-render render <source> [--out <destination>] [options]  (explicit form)
+  pts-render --help
+  pts-render --version
 
 Output:
   -o, --out <path>                 File or trailing-slash directory; repeatable
@@ -159,7 +159,7 @@ async function main(): Promise<void> {
     if (!parsed.quiet) {
       for (const warning of result.warnings) {
         process.stderr.write(
-          "ptsjs: " + warning.code + ": " + warning.message + "\n",
+          "pts-render: " + warning.code + ": " + warning.message + "\n",
         );
       }
       if (result.logs.stdout) process.stderr.write(result.logs.stdout);
@@ -200,7 +200,9 @@ async function main(): Promise<void> {
       );
       return;
     }
-    process.stderr.write("ptsjs: " + error.code + ": " + error.message + "\n");
+    process.stderr.write(
+      "pts-render: " + error.code + ": " + error.message + "\n",
+    );
     if (error.hint) process.stderr.write("Hint: " + error.hint + "\n");
   }
 }
@@ -208,7 +210,7 @@ async function main(): Promise<void> {
 void main().catch((error: unknown) => {
   process.exitCode = 6;
   process.stderr.write(
-    "ptsjs: WORKER_FAILED: " +
+    "pts-render: WORKER_FAILED: " +
       (error instanceof Error ? error.message : String(error)) +
       "\n",
   );

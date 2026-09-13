@@ -65,14 +65,14 @@ function run(args, cwd) {
 // Child processes resolve cwd symlinks, including macOS temporary directories.
 // Use the same canonical path when checking their generated output locations.
 const temporary = await realpath(
-  await mkdtemp(join(tmpdir(), "pts-cli-integration-")),
+  await mkdtemp(join(tmpdir(), "pts-render-integration-")),
 );
 
 try {
   const help = await run(["--help"]);
   assert(help.code === 0, "--help failed");
   assert(
-    help.stdout.toString().includes("ptsjs <source>"),
+    help.stdout.toString().includes("pts-render <source>"),
     "help is incomplete",
   );
   assert(
@@ -300,7 +300,7 @@ try {
       "render",
       fontScene,
       "--font",
-      "Pts CLI Configured Font=" + systemFont,
+      "Pts Render Configured Font=" + systemFont,
       "--asset-root",
       resolve("test/fixtures/assets"),
       "--out",
@@ -485,7 +485,7 @@ try {
     "bad PNG Buffer",
   );
   assert(
-    (await readFile(programmaticPath, "utf8")).includes("Pts CLI"),
+    (await readFile(programmaticPath, "utf8")).includes("Pts Render"),
     "bad SVG file",
   );
   assert(

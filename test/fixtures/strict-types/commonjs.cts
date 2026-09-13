@@ -1,5 +1,5 @@
-import adapter = require("pts-cli");
-import sceneHelpers = require("pts-cli/scene");
+import adapter = require("pts-render");
+import sceneHelpers = require("pts-render/scene");
 
 const space = new adapter.SkiaCanvasSpace(20, 10);
 const form: adapter.SkiaCanvasForm = space.getForm();

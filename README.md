@@ -1,10 +1,10 @@
-# pts-cli
+# pts-render
 
 Render [Pts.js](https://ptsjs.org/) scenes to PNG, JPEG, WebP, raw RGBA, and SVG
 in Node.js. The package uses
 [skia-canvas](https://github.com/samizdatco/skia-canvas) and provides:
 
-- the `ptsjs` command for agents, scripts, and build pipelines;
+- the `pts-render` command for agents, scripts, and build pipelines;
 - a deterministic `renderScene()` API;
 - a portable JavaScript format that runs in Node and a normal browser
   CanvasSpace;
@@ -15,9 +15,8 @@ Pts itself is never patched. All Node integration lives in this repository.
 
 ## Status
 
-This is the `0.1.0` release for published **Pts 1.0.0**. The package name is
-`pts-cli`; the executable is `ptsjs`. Keeping the command slightly more specific
-avoids likely collisions around a generic `pts` executable.
+This is the `0.1.0` release for published **Pts 1.0.0**. Both the npm package
+and the installed command are named `pts-render`.
 
 Node.js 20 or later is required. Pts is an unbundled `^1.0.0` peer; development
 and compatibility verification pin npm `pts@1.0.0` exactly. The upstream source
@@ -51,21 +50,22 @@ approve skia-canvas's installer before rendering.
 After npm publication, render a file without installing the package globally:
 
 ```sh
-npx pts-cli drawing.mjs
+npx pts-render drawing.mjs
 ```
 
 For unattended or reproducible use, suppress npm's install prompt and pin the
 version:
 
 ```sh
-npx --yes pts-cli@0.1.0 drawing.mjs --json
+npx --yes pts-render@0.1.0 drawing.mjs --json
 ```
 
-The package installs one executable named `ptsjs`, so the persistent form is:
+The package installs one executable named `pts-render`, so the persistent form
+is:
 
 ```sh
-npm install --global pts-cli
-ptsjs drawing.mjs
+npm install --global pts-render
+pts-render drawing.mjs
 ```
 
 ### From this checkout
@@ -118,7 +118,7 @@ export default run;
 Render it in Node:
 
 ```sh
-ptsjs circles.mjs \
+pts-render circles.mjs \
   --size 640x360 \
   --pointer 320,180 \
   --time 1000 \
@@ -142,7 +142,7 @@ export default {
 Mount the exact same function or configured object in a browser:
 
 ```js
-import { mountScene } from "pts-cli/browser";
+import { mountScene } from "pts-render/browser";
 import run from "./circles.mjs";
 
 const mounted = await mountScene(run, {
@@ -154,10 +154,10 @@ const mounted = await mountScene(run, {
 await mounted.dispose();
 ```
 
-`pts-cli/browser` has no Node built-in, skia-canvas, or native dependency edge
-in its module graph. It creates a real Pts CanvasSpace and CanvasForm, preserves
-the same initial resize/start ordering as the Node runner, and owns input
-binding and playback. It intentionally rejects SVGSpace targets.
+`pts-render/browser` has no Node built-in, skia-canvas, or native dependency
+edge in its module graph. It creates a real Pts CanvasSpace and CanvasForm,
+preserves the same initial resize/start ordering as the Node runner, and owns
+input binding and playback. It intentionally rejects SVGSpace targets.
 
 ### Delta from a standard web demo
 
@@ -183,7 +183,7 @@ worker VM and supplies Pts globals, `Pts.quickStart`, a private CanvasSpace
 facade, deterministic lifecycle methods, and narrowly supported Canvas globals:
 
 ```sh
-ptsjs path/to/pts/demo/circle.intersectCircle2D.js \
+pts-render path/to/pts/demo/circle.intersectCircle2D.js \
   --loader auto \
   --size 640x360 \
   --pointer 320,180 \
@@ -216,7 +216,7 @@ Root-relative legacy image paths require an explicit root instead of guessing
 the machine filesystem:
 
 ```sh
-ptsjs path/to/pts/demo/guide.image_load.js \
+pts-render path/to/pts/demo/guide.image_load.js \
   --asset-root path/to/pts \
   --out image-demo.png
 ```
@@ -228,8 +228,8 @@ comes from the Canvas recording, not SVGSpace.
 ## CLI
 
 ```text
-ptsjs <source> [--out <destination>] [options]
-ptsjs render <source> [--out <destination>] [options]
+pts-render <source> [--out <destination>] [options]
+pts-render render <source> [--out <destination>] [options]
 ```
 
 Core options:
@@ -281,8 +281,8 @@ name should use `--json` when they need to discover it programmatically.
 `--format` selects the generated extension:
 
 ```sh
-ptsjs scene.mjs --format svg --text-mode outline --json
-ptsjs scene.mjs --out renders/ --format webp --json
+pts-render scene.mjs --format svg --text-mode outline --json
+pts-render scene.mjs --out renders/ --format webp --json
 ```
 
 The second form creates a unique file inside `renders/`. A bare `--out` remains
@@ -387,7 +387,7 @@ export/commit, 6 for native/environment, 124 for timeout, and 130 for SIGINT.
 ## Programmatic one-shot API
 
 ```js
-import { renderScene } from "pts-cli";
+import { renderScene } from "pts-render";
 
 const result = await renderScene("./circles.mjs", {
   pointer: [320, 180],
@@ -500,7 +500,7 @@ Use `SkiaCanvasSpace` directly when a worker and scene schema are unnecessary:
 
 ```js
 import { Circle } from "pts";
-import { SkiaCanvasSpace } from "pts-cli";
+import { SkiaCanvasSpace } from "pts-render";
 
 const space = new SkiaCanvasSpace(640, 360, {
   background: "#10131a",

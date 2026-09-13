@@ -288,7 +288,9 @@ export class NodeSceneAssets implements PtsSceneAssets {
         }
 
         const data = await this.#fetch(url, enforceRoot);
-        this.#fontDirectory ??= await mkdtemp(join(tmpdir(), "pts-cli-fonts-"));
+        this.#fontDirectory ??= await mkdtemp(
+          join(tmpdir(), "pts-render-fonts-"),
+        );
         const extension = this.#fontExtension(url);
         const name =
           createHash("sha256")

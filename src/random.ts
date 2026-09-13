@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import type { RandomFacts } from "./renderTypes.js";
 
-export const RANDOM_ALGORITHM = "pts-cli-seed-v1" as const;
+export const RANDOM_ALGORITHM = "pts-render-seed-v1" as const;
 
 export function effectivePtsSeed(seed: string): string {
   return (

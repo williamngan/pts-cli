@@ -1,21 +1,21 @@
 {
-  "name": "pts-cli",
+  "name": "pts-render",
   "version": "0.1.0",
   "description": "Render portable and classic Pts scenes to PNG and SVG with a deterministic Node.js CLI and API",
   "license": "Apache-2.0",
   "author": "William Ngan",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/williamngan/pts-cli.git"
+    "url": "git+https://github.com/williamngan/pts-render.git"
   },
   "bugs": {
-    "url": "https://github.com/williamngan/pts-cli/issues"
+    "url": "https://github.com/williamngan/pts-render/issues"
   },
-  "homepage": "https://github.com/williamngan/pts-cli#readme",
+  "homepage": "https://github.com/williamngan/pts-render#readme",
   "type": "module",
   "sideEffects": false,
   "bin": {
-    "ptsjs": "./dist/cli.mjs"
+    "pts-render": "./dist/cli.mjs"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",

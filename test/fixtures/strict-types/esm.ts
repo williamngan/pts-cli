@@ -3,9 +3,9 @@ import {
   SkiaCanvasSpace,
   type RasterFormat,
   type SkiaCanvasForm,
-} from "pts-cli";
-import { mountScene } from "pts-cli/browser";
-import { defineScene } from "pts-cli/scene";
+} from "pts-render";
+import { mountScene } from "pts-render/browser";
+import { defineScene } from "pts-render/scene";
 
 const scene = defineScene({
   apiVersion: 1,

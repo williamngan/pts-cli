@@ -519,7 +519,7 @@ export async function executeClassicDemo(
 
   const context = createContext(sandbox, {
     codeGeneration: { strings: false, wasm: false },
-    name: "pts-cli classic demo: " + loaded.source,
+    name: "pts-render classic demo: " + loaded.source,
   });
   try {
     const completion = loaded.script.runInContext(context, {

@@ -9,12 +9,12 @@
     />
     <meta name="theme-color" content="#10283a" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Pts CLI" />
+    <meta property="og:title" content="Pts Render" />
     <meta
       property="og:description"
       content="Render Pts.js to images and SVG from the command line."
     />
-    <title>Pts CLI</title>
+    <title>Pts Render</title>
     <link rel="icon" href="data:," />
 
     <style>
@@ -585,12 +585,12 @@
 
     <header class="site-header">
       <nav class="nav container" aria-label="Main navigation">
-        <a class="brand" href="#top" aria-label="Pts CLI home">
+        <a class="brand" href="#top" aria-label="Pts Render home">
           <strong>Pts.</strong>
-          <span>CLI</span>
+          <span>Render</span>
         </a>
         <a href="https://ptsjs.org">Pts.js</a>
-        <a href="https://github.com/williamngan/pts-cli">GitHub</a>
+        <a href="https://github.com/williamngan/pts-render">GitHub</a>
       </nav>
     </header>
 
@@ -606,7 +606,7 @@
             <article class="terminal">
               <pre
                 tabindex="0"
-              ><code id="startCode"><span class="prompt">$</span> npx pts-cli interpolate.mjs
+              ><code id="startCode"><span class="prompt">$</span> npx pts-render interpolate.mjs
 
 <span class="output-path">pts-output/interpolate-&lt;render-id&gt;.png</span></code></pre>
               <svg
@@ -713,12 +713,12 @@
             <h2>Simple interface</h2>
             <p>
               Export one function with Pts drawing code, and run
-              <code class="ht">npx pts-cli file.mjs</code>.
+              <code class="ht">npx pts-render file.mjs</code>.
             </p>
             <p>
               Alternatively, install globally via
-              <code class="ht">npm i -g pts-cli</code> and run
-              <code class="ht">ptsjs file.mjs</code>.
+              <code class="ht">npm i -g pts-render</code> and run
+              <code class="ht">pts-render file.mjs</code>.
             </p>
           </div>
 
@@ -772,11 +772,11 @@
                 <pre
                   class="usage-code"
                   tabindex="0"
-                ><code><span class="prompt">$</span> npx pts-cli interpolate.mjs \
+                ><code><span class="prompt">$</span> npx pts-render interpolate.mjs \
   --out interpolate.png \
   --out interpolate.svg
 
-<span class="prompt">$</span> npx pts-cli interpolate.mjs \
+<span class="prompt">$</span> npx pts-render interpolate.mjs \
   --size 1200x630 \
   --out card.png</code></pre>
                 <p>
@@ -791,7 +791,7 @@
                   class="usage-code"
                   tabindex="0"
                 ><code><span class="tok-key">import</span> { mountScene } <span class="tok-key">from</span>
-  <span class="tok-string">"pts-cli/browser"</span>;
+  <span class="tok-string">"pts-render/browser"</span>;
 <span class="tok-key">import</span> run <span class="tok-key">from</span> <span class="tok-string">"./interpolate.mjs"</span>;
 
 <span class="tok-key">await</span> <span class="tok-function">mountScene</span>(run, {
@@ -820,7 +820,7 @@
             <div class="feature-row">
               <dt>CLI and API</dt>
               <dd>
-                Use the <code>ptsjs</code> command or call
+                Use the <code>pts-render</code> command or call
                 <code>renderScene()</code> from Node.
               </dd>
             </div>
@@ -834,7 +834,7 @@
               <dt>More</dt>
               <dd>
                 See command options and additional documentations in the
-                <a href="https://github.com/williamngan/pts-cli#readme"
+                <a href="https://github.com/williamngan/pts-render#readme"
                   >README</a
                 >.
               </dd>
@@ -846,12 +846,12 @@
 
     <footer class="site-footer">
       <div class="footer-inner container">
-        <strong>pts-cli</strong>
+        <strong>pts-render</strong>
         <div class="footer-links">
           <a href="https://ptsjs.org/">Pts.js</a>
-          <a href="https://github.com/williamngan/pts-cli#readme">Docs</a>
-          <a href="https://github.com/williamngan/pts-cli">GitHub</a>
-          <a href="https://github.com/williamngan/pts-cli/blob/main/LICENSE"
+          <a href="https://github.com/williamngan/pts-render#readme">Docs</a>
+          <a href="https://github.com/williamngan/pts-render">GitHub</a>
+          <a href="https://github.com/williamngan/pts-render/blob/main/LICENSE"
             >Apache 2.0 License</a
           >
         </div>

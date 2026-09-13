@@ -73,7 +73,7 @@ function throwIfCancelled(
 async function prepareArtifacts(
   request: PreparedRenderRequest,
 ): Promise<{ readonly plans: readonly ArtifactPlan[]; readonly temp: string }> {
-  const temp = await mkdtemp(join(tmpdir(), "pts-cli-render-"));
+  const temp = await mkdtemp(join(tmpdir(), "pts-render-job-"));
   const plans: ArtifactPlan[] = [];
   const canonicalDestinations = new Set<string>();
 
@@ -171,7 +171,7 @@ async function prepareArtifacts(
           parent,
           "." +
             basename(output.destination) +
-            ".ptsjs-" +
+            ".pts-render-" +
             randomUUID() +
             ".tmp",
         ),

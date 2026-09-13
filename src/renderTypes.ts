@@ -155,7 +155,7 @@ export interface RuntimeFacts {
 export interface RandomFacts {
   readonly seed: string | null;
   readonly effectiveSeed: string | null;
-  readonly algorithm: "pts-cli-seed-v1" | null;
+  readonly algorithm: "pts-render-seed-v1" | null;
   readonly seedApplied: boolean;
 }
 

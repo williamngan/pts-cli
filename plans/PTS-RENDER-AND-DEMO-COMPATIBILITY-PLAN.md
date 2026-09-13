@@ -1,4 +1,4 @@
-# Pts CLI and standard-demo compatibility plan
+# Pts Render and standard-demo compatibility plan
 
 > Historical implementation plan. The Pts 1.0.0 release supersedes the Git
 > dependency blockers and baseline below. Current behavior and verification
@@ -17,9 +17,9 @@
 Status: Core implementation complete; release-only gates remain  
 Date: 2026-08-22
 
-Product name: Pts CLI  
-Working npm package name: `pts-cli`  
-Executable name: `ptsjs`  
+Product name: Pts Render  
+npm package name: `pts-render`  
+Executable name: `pts-render`  
 Repository: this repository only  
 Authoritative Pts baseline: the latest reviewed commit on `pts/revamp`  
 Hard constraint: never modify, patch, build in, or write generated artifacts to
@@ -35,7 +35,7 @@ The product will support two intentionally separate source contracts:
 
 1. **Portable scene modules** are the recommended authoring format. The same
    `.mjs` scene module can be mounted by a small browser harness or rendered by
-   `ptsjs`. Its drawing code uses ordinary Pts `space`, `form`, player, and
+   `pts-render`. Its drawing code uses ordinary Pts `space`, `form`, player, and
    geometry APIs. It does not import Skia, write files, or control the Node
    lifecycle.
 2. **Classic Pts demo compatibility** loads existing browser demo scripts such
@@ -224,9 +224,9 @@ Use these names during implementation:
 
 | Role                           | Name                                |
 | ------------------------------ | ----------------------------------- |
-| Product/documentation          | Pts CLI                             |
-| Working npm package            | `pts-cli`                           |
-| Installed executable           | `ptsjs`                             |
+| Product/documentation          | Pts Render                          |
+| npm package                    | `pts-render`                        |
+| Installed executable           | `pts-render`                        |
 | Current implementation backend | `skia-canvas`                       |
 | Existing low-level classes     | `SkiaCanvasSpace`, `SkiaCanvasForm` |
 
@@ -235,11 +235,9 @@ of Pts itself. `skia-pts-canvas` accurately names the current adapter but not
 the CLI product. `pts` is not installed as a binary in the first release because
 it collides with the OpenAFS command suite and is less unambiguous for agents.
 
-If an owned npm scope is available before publication, `@ptsjs/cli` may replace
-the working unscoped package name. That is a release-name decision only: it must
-not change the scene schema, executable name, command grammar, or programmatic
-API. All committed examples should use one package name at a time; do not mix
-provisional names throughout the documentation.
+The npm package and installed executable are both named `pts-render`, so
+`npx pts-render` and a global install use the same command. All committed
+examples use this package name.
 
 Renaming the remote repository is not an implementation prerequisite and must
 not be attempted automatically. The package remains private until the Pts revamp
@@ -315,7 +313,7 @@ The first CLI release will not:
 ## 7. Architecture
 
 ```text
-ptsjs parent process
+pts-render parent process
   ├── parses and validates CLI arguments
   ├── reserves output destinations
   ├── launches one render worker
@@ -364,8 +362,8 @@ inputs and frames, calls exporters, and guarantees cleanup.
 
 Owns command syntax, child-process orchestration, logs, JSON records, exit
 codes, output-path safety, and signal handling. Its parent entry does not import
-or initialize Skia; `ptsjs --help`, `--version`, and argument failures must work
-without loading the native renderer.
+or initialize Skia; `pts-render --help`, `--version`, and argument failures must
+work without loading the native renderer.
 
 ### 7.2 Internal loader contract
 
@@ -414,7 +412,7 @@ and one-shot rendering API. It will not re-export all of Pts or Skia Canvas.
 Proposed conceptual exports:
 
 ```ts
-// pts-cli
+// pts-render
 export { SkiaCanvasSpace, SkiaCanvasForm };
 export { renderScene };
 export type {
@@ -428,13 +426,13 @@ export type {
   RenderOutputResult,
 };
 
-// pts-cli/scene -- browser-safe and optional
+// pts-render/scene -- browser-safe and optional
 type ExactScene<T extends PtsScene> = T &
   Record<Exclude<keyof T, keyof PtsScene>, never>;
 export function defineScene<const T extends PtsScene>(scene: ExactScene<T>): T;
 export type { PtsScene, PtsSceneContext };
 
-// pts-cli/browser -- browser-only, with no Skia/Node dependency edge
+// pts-render/browser -- browser-only, with no Skia/Node dependency edge
 export function mountScene(
   scene: PtsSceneSource,
   options: MountSceneOptions,
@@ -447,21 +445,21 @@ default-exported `run` function is the simplest JavaScript format; a plain
 object adds optional file-level configuration. Neither form needs to import the
 CLI package.
 
-The `pts-cli/scene` and `pts-cli/browser` builds must have no Node built-ins,
-Skia imports, or native dependency edges. A package/build and browser-bundler
-test will enforce this. `browser` may import the Pts peer and browser APIs;
-`scene` remains an identity helper plus types. If the identity helper's
-isolation cannot be guaranteed, omit that helper and publish types only. The
-browser mount helper is tested as a real product surface because it owns
-important lifecycle semantics.
+The `pts-render/scene` and `pts-render/browser` builds must have no Node
+built-ins, Skia imports, or native dependency edges. A package/build and
+browser-bundler test will enforce this. `browser` may import the Pts peer and
+browser APIs; `scene` remains an identity helper plus types. If the identity
+helper's isolation cannot be guaranteed, omit that helper and publish types
+only. The browser mount helper is tested as a real product surface because it
+owns important lifecycle semantics.
 
 Proposed `package.json` intent:
 
 ```json
 {
-  "name": "pts-cli",
+  "name": "pts-render",
   "bin": {
-    "ptsjs": "./dist/cli.mjs"
+    "pts-render": "./dist/cli.mjs"
   },
   "exports": {
     ".": {
@@ -496,10 +494,10 @@ The CLI must install as a working product, while Pts must resolve only once:
 - packed-install tests cover npm and pnpm, local and global-style bin links, and
   `npx`-equivalent use. A missing or incompatible peer fails before scene load
   with `PTS_INCOMPATIBLE` and the exact required range.
-- importing `pts-cli/scene` or `pts-cli/browser` must not pull `skia-canvas`
-  into the browser module graph, even though installing the single package still
-  installs its native CLI dependency. Package extraction can solve install
-  weight later without changing the scene schema.
+- importing `pts-render/scene` or `pts-render/browser` must not pull
+  `skia-canvas` into the browser module graph, even though installing the single
+  package still installs its native CLI dependency. Package extraction can solve
+  install weight later without changing the scene schema.
 
 ## 9. Portable scene contract
 
@@ -642,7 +640,7 @@ internals still cross the declared compatibility boundary.
 A browser entry point mounts the same function or configured object:
 
 ```js
-import { mountScene } from "pts-cli/browser";
+import { mountScene } from "pts-render/browser";
 import run from "./circles.mjs";
 
 const mounted = await mountScene(run, {
@@ -739,7 +737,7 @@ scene imports geometry or seeds randomness through another.
 
 Rules:
 
-1. `pts-cli` keeps Pts as an unbundled peer dependency.
+1. `pts-render` keeps Pts as an unbundled peer dependency.
 2. The Node runner passes the same imported namespace used by the adapter into
    every scene context and legacy VM.
 3. Portable scenes should use `context.Pts` for runtime values. Type-only
@@ -919,19 +917,19 @@ capability sandbox. Scene modules can still import Node filesystem/network APIs.
 ### 11.1 Primary command
 
 ```text
-npx pts-cli <source> [--out <destination>] [options]
-ptsjs <source> [--out <destination>] [options]
-ptsjs render <source> [--out <destination>] [options]  # explicit alias
+npx pts-render <source> [--out <destination>] [options]
+pts-render <source> [--out <destination>] [options]
+pts-render render <source> [--out <destination>] [options]  # explicit alias
 ```
 
 Examples:
 
 ```sh
-ptsjs scene.mjs --out artwork.png
-ptsjs scene.mjs --out artwork.svg --text-mode outline
-ptsjs scene.mjs --out artwork.png --out artwork.svg
-ptsjs scene.mjs --frame 120 --fps 60 --seed launch --out frame.png
-ptsjs ../pts/demo/circle.intersectCircle2D.js \
+pts-render scene.mjs --out artwork.png
+pts-render scene.mjs --out artwork.svg --text-mode outline
+pts-render scene.mjs --out artwork.png --out artwork.svg
+pts-render scene.mjs --frame 120 --fps 60 --seed launch --out frame.png
+pts-render ../pts/demo/circle.intersectCircle2D.js \
   --loader pts-demo --size 640x360 --pointer 320,180 --out circle.svg
 ```
 
@@ -1134,7 +1132,7 @@ Version the record independently of the scene schema:
   "random": {
     "seed": "launch",
     "effectiveSeed": "launch",
-    "algorithm": "pts-cli-seed-v1",
+    "algorithm": "pts-render-seed-v1",
     "seedApplied": true
   },
   "outputs": [
@@ -1537,17 +1535,17 @@ therefore does not unexpectedly shift another. The derivation algorithm is
 versioned as result metadata; changing it is a reproducibility-breaking change
 even if the public seed string stays the same.
 
-For `pts-cli-seed-v1`, the two Math streams hash the UTF-8 bytes of
-`pts-cli-seed-v1\0<domain>\0<effective-seed>` with SHA-256, using the distinct
-domains `worker-math` and `legacy-math`, to initialize xoshiro128** state. The
-first 16 digest bytes become four little-endian unsigned 32-bit words; an
-all-zero state is replaced by the documented fixed nonzero state. Outputs are
-unsigned 32-bit fractions divided by 2^32. A specified empty/whitespace-only
-seed is valid and produces the fixed Pts empty sequence; it is distinct from
-omitting `--seed`. The reviewed Pts UHEPRNG now consumes no host `Math.random`
-during `Num.seed`, and golden tests pin all three streams. The exact Pts
-revision remains part of reproducibility metadata because Pts owns its own
-sequence algorithm.
+For `pts-render-seed-v1`, the two Math streams hash the UTF-8 bytes of
+`pts-render-seed-v1\0<domain>\0<effective-seed>` with SHA-256, using the
+distinct domains `worker-math` and `legacy-math`, to initialize xoshiro128**
+state. The first 16 digest bytes become four little-endian unsigned 32-bit
+words; an all-zero state is replaced by the documented fixed nonzero state.
+Outputs are unsigned 32-bit fractions divided by 2^32. A specified
+empty/whitespace-only seed is valid and produces the fixed Pts empty sequence;
+it is distinct from omitting `--seed`. The reviewed Pts UHEPRNG now consumes no
+host `Math.random` during `Num.seed`, and golden tests pin all three streams.
+The exact Pts revision remains part of reproducibility metadata because Pts owns
+its own sequence algorithm.
 
 Code using cryptographic randomness, time, network data, process state, or
 untracked native sources is not claimed deterministic. Scene top-level random
@@ -1590,7 +1588,7 @@ APIs. Importing a scene executes arbitrary Node code.
 Explicit invocation is always available:
 
 ```sh
-ptsjs demo.js --loader pts-demo --out demo.png
+pts-render demo.js --loader pts-demo --out demo.png
 ```
 
 `--loader auto` may select `pts-demo` only when a non-executing source preflight
@@ -2085,7 +2083,8 @@ committed paths; an in-progress filesystem syscall itself is not preemptible.
 
 Browser-entry integration tests additionally cover:
 
-- bundling `pts-cli/browser` with no Node built-in or Skia module in the graph;
+- bundling `pts-render/browser` with no Node built-in or Skia module in the
+  graph;
 - the exact same function or configured object in browser CanvasSpace and Node
   SkiaCanvasSpace;
 - fixed and responsive size precedence;
@@ -2248,7 +2247,7 @@ hand-maintained prose list.
 ### Phase 0: Baseline and plan gate
 
 1. Approve this public API direction.
-2. Confirm the release package name; keep `ptsjs` as the executable.
+2. Use `pts-render` for both the release package name and executable.
 3. After confirmation, update this repository's package metadata, documentation,
    internal self-references, and packed-consumer fixtures to the one selected
    package name. Do not rename a remote repository automatically.
@@ -2301,7 +2300,7 @@ helper and `renderScene`.
 
 ### Phase 3: CLI and worker
 
-1. Add the `ptsjs` bin and argument parser.
+1. Add the `pts-render` bin and argument parser.
 2. Implement the child-process protocol.
 3. Implement worker-owned artifact transport and bounded parent materialization
    for Buffer results.
@@ -2388,7 +2387,7 @@ Rejected. The CLI is the primary product, but the tested adapter is useful for
 servers, batch systems, and custom schedulers and is the clean engine beneath
 the command.
 
-### Ship both `pts` and `ptsjs` binaries
+### Ship both `pts` and `pts-render` binaries
 
 Rejected initially. The alias would reintroduce the known command collision and
 make agent documentation ambiguous. It can be revisited from real usage data.
@@ -2423,9 +2422,9 @@ The first CLI milestone is complete only when:
 1. this repository targets the latest explicitly reviewed Pts revamp commit;
 2. the Pts repository has no task-introduced delta from its recorded initial
    HEAD/status/diff fingerprint;
-3. `npx pts-cli scene.mjs`, `ptsjs scene.mjs`, and the explicit
-   `ptsjs render scene.mjs` alias work from a packed install;
-4. the same portable scene is mounted by `pts-cli/browser` without source
+3. `npx pts-render scene.mjs`, `pts-render scene.mjs`, and the explicit
+   `pts-render render scene.mjs` alias work from a packed install;
+4. the same portable scene is mounted by `pts-render/browser` without source
    changes or a Skia dependency in its browser bundle;
 5. PNG and SVG export through the public adapter and CLI;
 6. SVG preserve/outline text behavior is tested and documented;
@@ -2450,14 +2449,12 @@ The first CLI milestone is complete only when:
 
 These do not block the architecture or implementation order:
 
-1. Whether the published package is `pts-cli` or `@ptsjs/cli`, provided the
-   package name is finalized before public documentation and publication.
-2. Which complex Pts Img demos graduate from `partial` after the simple image
+1. Which complex Pts Img demos graduate from `partial` after the simple image
    bridge lands.
-3. Whether the tested `pts-cli/browser` entry point should later be extracted
+2. Whether the tested `pts-render/browser` entry point should later be extracted
    into a separate browser-only package to avoid installing Node-native
    dependencies in web-only projects.
-4. Whether a separately named, explicitly trusted in-process scene-object helper
+3. Whether a separately named, explicitly trusted in-process scene-object helper
    is useful after the worker-based `renderScene` API is established. It must
    not overload `renderScene` with different timeout or seed semantics.
 

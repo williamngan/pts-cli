@@ -4,9 +4,10 @@
 
 ### Added
 
-- `npx pts-cli <source>` and `ptsjs <source>` CLI forms, with an explicit
-  `render` alias, stable JSON records, exit codes, stdout output, multiple
-  formats, no-clobber commits, hard timeouts, signals, and resource limits.
+- `npx pts-render <source>` and `pts-render <source>` CLI forms, with an
+  explicit `render` alias, stable JSON records, exit codes, stdout output,
+  multiple formats, no-clobber commits, hard timeouts, signals, and resource
+  limits.
 - Collision-safe default PNG destinations with source-derived names, UUID render
   IDs, explicit trailing-slash directory targets, and format-selectable
   generated outputs.
@@ -40,7 +41,9 @@
 
 ### Changed
 
-- Package and repository identity are now `pts-cli`.
+- Package, executable, and repository identity are now `pts-render`.
+- Seeded JavaScript streams use the `pts-render-seed-v1` namespace, so their
+  sequences differ from earlier development builds for the same seed.
 - Logical dimensions are optional, default to `800x600`, and remain overridable
   through `--size` or the programmatic `size` option.
 - skia-canvas is a normal exact runtime dependency. Pts is an unbundled `^1.0.0`

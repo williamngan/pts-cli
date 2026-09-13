@@ -213,7 +213,7 @@ describe("Node scene assets", () => {
   });
 
   it("loads bounded data URLs without exposing their payload in errors", async () => {
-    const temporary = await mkdtemp(join(tmpdir(), "pts-cli-assets-"));
+    const temporary = await mkdtemp(join(tmpdir(), "pts-render-assets-"));
     const assets = createAssets(temporary);
     try {
       const source = "data:image/svg+xml," + encodeURIComponent(squareSvg);
@@ -227,7 +227,7 @@ describe("Node scene assets", () => {
   });
 
   it("allows a failed image load to be retried successfully", async () => {
-    const temporary = await mkdtemp(join(tmpdir(), "pts-cli-assets-"));
+    const temporary = await mkdtemp(join(tmpdir(), "pts-render-assets-"));
     const assets = createAssets(temporary);
     try {
       await expect(assets.image("./late.svg")).rejects.toMatchObject({
@@ -244,7 +244,7 @@ describe("Node scene assets", () => {
   });
 
   it("confines explicit roots lexically and through file symlinks", async () => {
-    const temporary = await mkdtemp(join(tmpdir(), "pts-cli-assets-"));
+    const temporary = await mkdtemp(join(tmpdir(), "pts-render-assets-"));
     const root = join(temporary, "root");
     const outside = join(temporary, "outside.svg");
     await mkdir(root);
@@ -270,7 +270,7 @@ describe("Node scene assets", () => {
   });
 
   it("redacts URL credentials when network access is denied", async () => {
-    const temporary = await mkdtemp(join(tmpdir(), "pts-cli-assets-"));
+    const temporary = await mkdtemp(join(tmpdir(), "pts-render-assets-"));
     const assets = createAssets(temporary);
     try {
       const rejected = assets.image(
@@ -291,7 +291,7 @@ describe("Node scene assets", () => {
   });
 
   it("deduplicates identical pending font registrations and rejects conflicts", async () => {
-    const temporary = await mkdtemp(join(tmpdir(), "pts-cli-assets-"));
+    const temporary = await mkdtemp(join(tmpdir(), "pts-render-assets-"));
     const assets = createAssets(temporary);
     try {
       const first = assets.font({
@@ -320,7 +320,7 @@ describe("Node scene assets", () => {
   it.skipIf(systemFont === undefined)(
     "registers a real local font and makes identical registration idempotent",
     async () => {
-      const temporary = await mkdtemp(join(tmpdir(), "pts-cli-assets-"));
+      const temporary = await mkdtemp(join(tmpdir(), "pts-render-assets-"));
       const assets = new NodeSceneAssets({
         baseURL: pathToFileURL(temporary + sep),
         allowNet: false,
@@ -329,7 +329,7 @@ describe("Node scene assets", () => {
       });
       try {
         const options = {
-          family: "Pts CLI Fixture Font",
+          family: "Pts Render Fixture Font",
           sources: [pathToFileURL(systemFont as string)],
         };
         const first = assets.font(options);

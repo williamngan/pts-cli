@@ -1,4 +1,4 @@
-export const LEGACY_IMAGE_SOURCE = Symbol.for("pts-cli.legacy-image-source");
+export const LEGACY_IMAGE_SOURCE = Symbol.for("pts-render.legacy-image-source");
 
 export interface LegacyImageCarrier {
   readonly [LEGACY_IMAGE_SOURCE]: unknown;

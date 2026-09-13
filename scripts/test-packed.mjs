@@ -50,7 +50,7 @@ try {
   await mkdir(consumer);
   await writeFile(
     join(consumer, "package.json"),
-    JSON.stringify({ name: "pts-cli-consumer", private: true }),
+    JSON.stringify({ name: "pts-render-consumer", private: true }),
   );
   await execute(
     "npm",
@@ -127,7 +127,7 @@ try {
   );
 
   const esm = [
-    'import("pts-cli").then(async ({ renderScene, SkiaCanvasSpace }) => {',
+    'import("pts-render").then(async ({ renderScene, SkiaCanvasSpace }) => {',
     '  const space = new SkiaCanvasSpace(3, 2, { background: "#010203" });',
     '  const output = await space.toBuffer("raw");',
     '  if (output.length !== 24) throw new Error("ESM raster size mismatch");',
@@ -138,16 +138,16 @@ try {
     "  let mismatch;",
     `  try { await renderScene(${JSON.stringify(foreignScenePath)}, { outputs: [{ format: "png" }] }); } catch (error) { mismatch = error; }`,
     '  if (mismatch?.code !== "PTS_INSTANCE_MISMATCH") throw new Error("duplicate Pts was not rejected");',
-    '  const sceneEntry = await import("pts-cli/scene");',
+    '  const sceneEntry = await import("pts-render/scene");',
     '  if (sceneEntry.defineScene({ run() {} }).run === undefined) throw new Error("scene entry mismatch");',
-    '  const browserEntry = await import("pts-cli/browser");',
+    '  const browserEntry = await import("pts-render/browser");',
     '  if (typeof browserEntry.mountScene !== "function") throw new Error("browser entry mismatch");',
     "});",
   ].join("\n");
 
   const commonjs = [
-    'const { SkiaCanvasSpace } = require("pts-cli");',
-    'const { mountScene } = require("pts-cli/browser");',
+    'const { SkiaCanvasSpace } = require("pts-render");',
+    'const { mountScene } = require("pts-render/browser");',
     "(async () => {",
     '  if (typeof mountScene !== "function") throw new Error("CJS browser entry mismatch");',
     '  const space = new SkiaCanvasSpace(4, 2, { background: "#010203" });',
@@ -163,19 +163,19 @@ try {
     cwd: consumer,
   });
 
-  const bin = join(modules, "pts-cli", "dist", "cli.mjs");
+  const bin = join(modules, "pts-render", "dist", "cli.mjs");
   if (process.platform !== "win32" && ((await stat(bin)).mode & 0o111) === 0) {
-    throw new Error("ptsjs bin is not executable");
+    throw new Error("pts-render bin is not executable");
   }
-  await stat(join(modules, "pts-cli", "compatibility", "pts-revamp.json"));
+  await stat(join(modules, "pts-render", "compatibility", "pts-revamp.json"));
   const installedBin = join(
     modules,
     ".bin",
-    process.platform === "win32" ? "ptsjs.cmd" : "ptsjs",
+    process.platform === "win32" ? "pts-render.cmd" : "pts-render",
   );
   const version = await execute(installedBin, ["--version"], { cwd: consumer });
   const metadata = JSON.parse(
-    await readFile(join(modules, "pts-cli", "package.json"), "utf8"),
+    await readFile(join(modules, "pts-render", "package.json"), "utf8"),
   );
   if (version.stdout.trim() !== metadata.version)
     throw new Error(
@@ -185,13 +185,13 @@ try {
   const help = await execute(process.execPath, [bin, "--help"], {
     cwd: temporary,
   });
-  if (!help.stdout.includes("ptsjs <source>")) {
-    throw new Error("packed ptsjs help mismatch");
+  if (!help.stdout.includes("pts-render <source>")) {
+    throw new Error("packed pts-render help mismatch");
   }
   const generated = await execute(
-    process.execPath,
-    [bin, scenePath, "--json"],
-    { cwd: temporary },
+    "npx",
+    ["--no-install", "pts-render", scenePath, "--json"],
+    { cwd: consumer },
   );
   const generatedRecord = JSON.parse(generated.stdout);
   const generatedPath = generatedRecord.outputs?.[0]?.path;
@@ -201,17 +201,17 @@ try {
     !generatedPath.includes(generatedRecord.renderId) ||
     (await readFile(generatedPath)).readUInt32BE(0) !== 0x89504e47
   ) {
-    throw new Error("packed ptsjs generated PNG mismatch");
+    throw new Error("packed pts-render generated PNG mismatch");
   }
   const outputPath = join(temporary, "packed-output.png");
   await execute(
-    process.execPath,
-    [bin, "render", scenePath, "--out", outputPath, "--quiet"],
+    installedBin,
+    ["render", scenePath, "--out", outputPath, "--quiet"],
     { cwd: temporary },
   );
   const png = await readFile(outputPath);
   if (png.readUInt32BE(0) !== 0x89504e47) {
-    throw new Error("packed ptsjs PNG mismatch");
+    throw new Error("packed pts-render PNG mismatch");
   }
 } finally {
   await rm(temporary, { recursive: true, force: true });

@@ -497,7 +497,7 @@ export async function parseCLIArguments(
   const source = explicitRender ? raw.positionals[1] : raw.positionals[0];
   const expectedPositionals = explicitRender ? 2 : 1;
   if (raw.positionals.length !== expectedPositionals || !source) {
-    usage("Usage: ptsjs <source> [--out <destination>]");
+    usage("Usage: pts-render <source> [--out <destination>]");
   }
 
   const renderId = randomUUID();

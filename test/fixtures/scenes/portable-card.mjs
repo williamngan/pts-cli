@@ -18,7 +18,7 @@ export default {
           .circle(Circle.fromCenter(space.pointer, radius))
           .fillOnly("#f8fafc")
           .font(10, "bold")
-          .text([4, 58], "Pts CLI");
+          .text([4, 58], "Pts Render");
       },
     });
   },
