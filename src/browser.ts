@@ -543,11 +543,16 @@ export async function mountScene(
   const ready = new Promise<void>((resolve) => {
     readyResolve = resolve;
   });
+  // An explicit size, from the options or the scene file, is a fixed canvas
+  // like the Node renderer's; only an unsized mount follows its container.
+  const fixedSize =
+    options.size !== undefined ||
+    (scene.width !== undefined && scene.height !== undefined);
   const space = new CanvasSpace(resolvedTarget(options.target), () =>
     readyResolve?.(),
   ).setup({
     bgcolor: options.background ?? scene.background ?? "transparent",
-    resize: options.resize ?? true,
+    resize: options.resize ?? !fixedSize,
     retina: options.retina ?? true,
   });
 

@@ -12,7 +12,8 @@
     </script>
     <style>
       #pt,
-      #pt-function {
+      #pt-function,
+      #pt-sized {
         width: 64px;
         height: 40px;
       }
@@ -21,6 +22,7 @@
   <body>
     <div id="pt"></div>
     <div id="pt-function"></div>
+    <div id="pt-sized"></div>
     <output id="result">pending</output>
     <script type="module">
       import * as Pts from "pts";
@@ -299,6 +301,55 @@
         if (document.querySelector("#pt-missing_container")) {
           throw new Error("Missing target created a container");
         }
+
+        const settle = () => new Promise((resolve) => setTimeout(resolve, 120));
+        const sized = await mountScene(
+          ({ space }) => {
+            space.add(() => {});
+          },
+          {
+            target: "#pt-sized",
+            size: { width: 30, height: 20 },
+            retina: false,
+            autoplay: false,
+          },
+        );
+        await settle();
+        if (
+          sized.space.element.width !== 30 ||
+          sized.space.element.height !== 20
+        ) {
+          throw new Error(
+            "explicit size was overridden: " +
+              sized.space.element.width +
+              "x" +
+              sized.space.element.height,
+          );
+        }
+        await sized.dispose();
+
+        const sceneSized = await mountScene(
+          { width: 40, height: 24, run() {} },
+          { target: "#pt-sized", retina: false, autoplay: false },
+        );
+        await settle();
+        if (
+          sceneSized.space.element.width !== 40 ||
+          sceneSized.space.element.height !== 24
+        ) {
+          throw new Error("scene size was overridden by the container");
+        }
+        await sceneSized.dispose();
+
+        const followsContainer = await mountScene(
+          { width: 40, height: 24, run() {} },
+          { target: "#pt-sized", resize: true, retina: false, autoplay: false },
+        );
+        await settle();
+        if (followsContainer.space.element.width !== 64) {
+          throw new Error("explicit resize: true did not follow the container");
+        }
+        await followsContainer.dispose();
 
         document.body.dataset.status = "passed";
         document.querySelector("#result").textContent = "browser smoke passed";
