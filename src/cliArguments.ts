@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { statSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { basename, extname, join, resolve } from "node:path";
 
@@ -362,6 +363,14 @@ function isDirectoryDestination(path: string): boolean {
   );
 }
 
+function isExistingDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 function parseOutputs(
   raw: RawArguments,
   source: string,
@@ -406,6 +415,18 @@ function parseOutputs(
               ),
               format,
             };
+          }
+          if (isExistingDirectory(path)) {
+            throw new PtsRenderError(
+              "OUTPUT_TARGET_INVALID",
+              "arguments",
+              "Output target is a directory: " + path,
+              {
+                hint:
+                  "Add a trailing slash to generate a filename inside it, " +
+                  "or pass a file path.",
+              },
+            );
           }
           return { path, format: outputFormat(path, explicit) };
         });

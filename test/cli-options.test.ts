@@ -176,6 +176,30 @@ describe("CLI option contract", () => {
     ).rejects.toMatchObject({ code: "CLI_USAGE", phase: "arguments" });
   });
 
+  it("names an existing directory target before inferring its format", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "pts-render-cli-dir-"));
+    try {
+      for (const target of [directory, join(directory, "..")]) {
+        await expect(
+          parseCLIArguments(["scene.mjs", "--out", target]),
+        ).rejects.toMatchObject({
+          code: "OUTPUT_TARGET_INVALID",
+          phase: "arguments",
+          message: "Output target is a directory: " + target,
+          hint: expect.stringContaining("trailing slash"),
+        });
+      }
+      await expect(
+        parseCLIArguments(["scene.mjs", "--out", directory, "--format", "png"]),
+      ).rejects.toMatchObject({ code: "OUTPUT_TARGET_INVALID" });
+      await expect(
+        parseCLIArguments(["scene.mjs", "--out", directory + "/"]),
+      ).resolves.toMatchObject({ command: "render" });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("supports stdout, inline options, aliases and the end-of-options marker", async () => {
     const parsed = await parseCLIArguments([
       "--format=jpg",
