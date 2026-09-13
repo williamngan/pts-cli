@@ -15,39 +15,14 @@ Pts itself is never patched. All Node integration lives in this repository.
 
 ## Status
 
-This is the `0.1.0` release for published **Pts 1.0.0**. Both the npm package
-and the installed command are named `pts-render`.
-
-Node.js 20 or later is required. Pts is an unbundled `^1.0.0` peer; development
-and compatibility verification pin npm `pts@1.0.0` exactly. The upstream source
-baseline is release commit `034e5f6ac8bcf54d2121ef88799ac43fc4b2c827`.
-Installation no longer depends on a Git branch or an unpublished Pts checkout.
-
-## Why skia-canvas
-
-Skia Canvas is a strong fit for this project:
-
-- Pts CanvasForm already targets the Canvas 2D drawing model.
-- Skia works without a DOM or headless browser.
-- The same retained drawing commands can encode raster files and SVG.
-- CPU rendering provides a dependable headless default, while GPU remains an
-  explicit option.
-- A worker process gives the CLI hard timeouts and isolates per-render Pts and
-  random state.
-
-The boundary is equally important. skia-canvas is a native dependency; fonts and
-pixels can vary across platforms; and it does not make DOM, audio, microphone,
-browser events, or HTMLSpace meaningful in Node. Its SVG is a recording of
-Canvas drawing commands, not a semantic Pts SVGSpace scene graph. Those cases
-are reported explicitly.
-
-The skia-canvas install script downloads its native binary (or compiles it when
-needed). If your package manager blocks dependency lifecycle scripts, explicitly
-approve skia-canvas's installer before rendering.
+This is the `0.1.0` release for published
+[**Pts 1.0.0**](https://www.npmjs.com/package/pts). Both the npm package and the
+installed command are named `pts-render`.
 
 ## Command line
 
-After npm publication, render a file without installing the package globally:
+Node.js 20 or later is required. You can ender a file without installing the
+package globally:
 
 ```sh
 npx pts-render drawing.mjs
@@ -139,6 +114,8 @@ export default {
 };
 ```
 
+## Quick testing in browser
+
 Mount the exact same function or configured object in a browser:
 
 ```js
@@ -175,55 +152,6 @@ at the edges:
 
 The callback itself remains normal Pts code. See
 [`examples/basic-card.mjs`](examples/basic-card.mjs) for the canonical example.
-
-## Rendering unchanged Pts demos
-
-The classic compatibility loader evaluates a browser demo once in an isolated
-worker VM and supplies Pts globals, `Pts.quickStart`, a private CanvasSpace
-facade, deterministic lifecycle methods, and narrowly supported Canvas globals:
-
-```sh
-pts-render path/to/pts/demo/circle.intersectCircle2D.js \
-  --loader auto \
-  --size 640x360 \
-  --pointer 320,180 \
-  --out circle.png \
-  --out circle.svg
-```
-
-Auto-selection is syntax-aware. It parses without evaluation and chooses the
-classic loader only for strong markers such as `Pts.quickStart`,
-`window.demoDescription`, or a known Space constructor. A source containing both
-module exports and classic markers is rejected as ambiguous; choose
-`--loader scene` or `--loader pts-demo` explicitly.
-
-Classic support is manifest-based, not a blanket “all demos” claim. For Pts
-1.0.0, the checked matrix contains:
-
-- 17 supported demos;
-- 4 supported-with-input demos;
-- 1 partial editable/pixel Img demo; and
-- 4 browser-only/audio demos marked not applicable.
-
-The supported set covers geometry, gradients, text, compositing, resize,
-actions, Tempo, physics, UI, direct CanvasSpace construction, non-editable image
-loading, and image patterns. Every source and image asset is SHA-256 pinned;
-every supported entry produces both PNG and SVG with visible content. The
-filtered-image demo uses the explicit SVG raster fallback described below. See
-[`compatibility/pts-revamp.json`](compatibility/pts-revamp.json).
-
-Root-relative legacy image paths require an explicit root instead of guessing
-the machine filesystem:
-
-```sh
-pts-render path/to/pts/demo/guide.image_load.js \
-  --asset-root path/to/pts \
-  --out image-demo.png
-```
-
-Editable Img canvases, pixel manipulation, audio, HTMLSpace, and SVGSpace fail
-at a named compatibility boundary. SVG file export remains available because it
-comes from the Canvas recording, not SVGSpace.
 
 ## CLI
 
@@ -594,6 +522,55 @@ reruns `pnpm check`; `prepack` always rebuilds the distributed files, including
 when packing a clean checkout. Browser tests require Chromium; install it with
 `pnpm exec playwright install chromium` if it is not already available. No
 package is published by the verification commands.
+
+## Rendering unchanged Pts demos
+
+The classic compatibility loader evaluates a browser demo once in an isolated
+worker VM and supplies Pts globals, `Pts.quickStart`, a private CanvasSpace
+facade, deterministic lifecycle methods, and narrowly supported Canvas globals:
+
+```sh
+pts-render path/to/pts/demo/circle.intersectCircle2D.js \
+  --loader auto \
+  --size 640x360 \
+  --pointer 320,180 \
+  --out circle.png \
+  --out circle.svg
+```
+
+Auto-selection is syntax-aware. It parses without evaluation and chooses the
+classic loader only for strong markers such as `Pts.quickStart`,
+`window.demoDescription`, or a known Space constructor. A source containing both
+module exports and classic markers is rejected as ambiguous; choose
+`--loader scene` or `--loader pts-demo` explicitly.
+
+Classic support is manifest-based, not a blanket “all demos” claim. For Pts
+1.0.0, the checked matrix contains:
+
+- 17 supported demos;
+- 4 supported-with-input demos;
+- 1 partial editable/pixel Img demo; and
+- 4 browser-only/audio demos marked not applicable.
+
+The supported set covers geometry, gradients, text, compositing, resize,
+actions, Tempo, physics, UI, direct CanvasSpace construction, non-editable image
+loading, and image patterns. Every source and image asset is SHA-256 pinned;
+every supported entry produces both PNG and SVG with visible content. The
+filtered-image demo uses the explicit SVG raster fallback described below. See
+[`compatibility/pts-revamp.json`](compatibility/pts-revamp.json).
+
+Root-relative legacy image paths require an explicit root instead of guessing
+the machine filesystem:
+
+```sh
+pts-render path/to/pts/demo/guide.image_load.js \
+  --asset-root path/to/pts \
+  --out image-demo.png
+```
+
+Editable Img canvases, pixel manipulation, audio, HTMLSpace, and SVGSpace fail
+at a named compatibility boundary. SVG file export remains available because it
+comes from the Canvas recording, not SVGSpace.
 
 ## Current limitations
 
