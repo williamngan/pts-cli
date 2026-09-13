@@ -2,6 +2,7 @@ import { readFile, stat } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extname, resolve } from "node:path";
 
+import { CSS_COLOR_HINT, isCSSColor } from "./cssColor.js";
 import { PtsRenderError } from "./PtsRenderError.js";
 import { snapshotJsonObject } from "./sceneValidation.js";
 import { selectAutomaticLoader } from "./sourceAnalysis.js";
@@ -392,6 +393,15 @@ function normalizeOutput(
       if (typeof output.matte !== "string") {
         invalid(path + ".matte must be a string");
       }
+      if (!isCSSColor(output.matte)) {
+        invalid(
+          path +
+            ".matte is not a supported CSS color: " +
+            output.matte +
+            "; " +
+            CSS_COLOR_HINT,
+        );
+      }
       request.matte = output.matte;
     }
     if (output.msaa !== undefined) {
@@ -659,6 +669,17 @@ export async function prepareRenderRequest(
     typeof rawOptions.background !== "string"
   ) {
     invalid("background must be a string");
+  }
+  if (
+    rawOptions.background !== undefined &&
+    !isCSSColor(rawOptions.background)
+  ) {
+    invalid(
+      "background is not a supported CSS color: " +
+        rawOptions.background +
+        "; " +
+        CSS_COLOR_HINT,
+    );
   }
   if (
     rawOptions.allowNet !== undefined &&

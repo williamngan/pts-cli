@@ -86,6 +86,27 @@ describe("render request validation", () => {
         outputs: [{ format: "svg", quality: 0.5 } as never],
       }),
     ).rejects.toThrow(/quality is not supported/);
+
+    await expect(
+      prepareRenderRequest(source, {
+        outputs: [{ format: "png", matte: "notacolor" }],
+      }),
+    ).rejects.toMatchObject({
+      code: "CLI_USAGE",
+      message: expect.stringContaining("matte is not a supported CSS color"),
+    });
+
+    await expect(
+      prepareRenderRequest(source, {
+        background: "ff0000",
+        outputs: [{ format: "png" }],
+      }),
+    ).rejects.toMatchObject({
+      code: "CLI_USAGE",
+      message: expect.stringContaining(
+        "background is not a supported CSS color",
+      ),
+    });
   });
 
   it("rejects duplicate destinations before scene execution", async () => {

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
 import { basename, extname, join, resolve } from "node:path";
 
+import { CSS_COLOR_HINT, isCSSColor } from "./cssColor.js";
 import { PtsRenderError } from "./PtsRenderError.js";
 import {
   DEFAULT_RENDER_RESOURCE_LIMITS,
@@ -67,6 +68,19 @@ const booleanOptions = new Set([
 
 function usage(message: string): never {
   throw new PtsRenderError("CLI_USAGE", "arguments", message);
+}
+
+function assertColorArgument(value: string, name: string): void {
+  if (!isCSSColor(value)) {
+    usage(
+      "--" +
+        name +
+        " is not a supported CSS color: " +
+        value +
+        "; " +
+        CSS_COLOR_HINT,
+    );
+  }
 }
 
 function normalizeOptionToken(token: string): {
@@ -424,6 +438,7 @@ function parseOutputs(
   if (matte !== undefined && formats.every((format) => format === "svg")) {
     usage("--matte requires a raster output");
   }
+  if (matte !== undefined) assertColorArgument(matte, "matte");
 
   const parsedDensity =
     density === undefined ? undefined : positiveInteger(density, "density");
@@ -561,6 +576,7 @@ export async function parseCLIArguments(
   }
   const events = await parseEvents(raw, effectiveLimits.maxInputBytes);
   const background = one(raw, "background");
+  if (background !== undefined) assertColorArgument(background, "background");
   const seed = one(raw, "seed");
   const assetRoot = one(raw, "asset-root");
 

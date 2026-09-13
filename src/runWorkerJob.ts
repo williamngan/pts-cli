@@ -13,6 +13,7 @@ import {
   loadClassicDemo,
   type ClassicDemoExecution,
 } from "./classicDemo.js";
+import { CSS_COLOR_HINT, isCSSColor } from "./cssColor.js";
 import { SkiaCanvasError } from "./errors.js";
 import { NodeSceneAssets } from "./NodeSceneAssets.js";
 import { PtsRenderError } from "./PtsRenderError.js";
@@ -553,6 +554,21 @@ export async function runWorkerJob(
   const width = job.size?.width ?? scene?.width ?? DEFAULT_RENDER_SIZE.width;
   const height =
     job.size?.height ?? scene?.height ?? DEFAULT_RENDER_SIZE.height;
+  if (
+    job.background === undefined &&
+    scene?.background !== undefined &&
+    !isCSSColor(scene.background)
+  ) {
+    throw new PtsRenderError(
+      "SCENE_INVALID",
+      "validate",
+      "background is not a supported CSS color: " +
+        scene.background +
+        "; " +
+        CSS_COLOR_HINT,
+      { details: { source: job.source } },
+    );
+  }
   const background =
     job.background ?? scene?.background ?? DEFAULT_RENDER_BACKGROUND;
   validateLogicalSize(width, height, job);

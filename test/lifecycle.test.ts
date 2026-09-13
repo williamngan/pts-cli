@@ -43,6 +43,23 @@ describe("SkiaCanvasSpace lifecycle", () => {
     expect(() => new SkiaCanvasSpace(width, height)).toThrow(RangeError);
   });
 
+  it("rejects colors that skia-canvas would silently ignore", async () => {
+    expect(
+      () => new SkiaCanvasSpace(8, 8, { background: "notacolor" }),
+    ).toThrow(/background is not a supported CSS color/);
+
+    const space = new SkiaCanvasSpace(8, 8, { background: "#123456" });
+    expect(() => {
+      space.background = "ff0000";
+    }).toThrow(TypeError);
+    expect(() => space.clear("red red")).toThrow(TypeError);
+    expect(space.background).toBe("#123456");
+    await expect(space.toBuffer("png", { matte: "notacolor" })).rejects.toThrow(
+      /matte is not a supported CSS color/,
+    );
+    space.dispose();
+  });
+
   it("checks allocation limits before constructing a native canvas", () => {
     expect(
       () =>

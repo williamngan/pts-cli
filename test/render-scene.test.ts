@@ -147,6 +147,27 @@ describe("renderScene worker and artifact lifecycle", () => {
     expect(await readdir(directory)).toEqual([]);
   });
 
+  it("rejects a scene background that skia-canvas would ignore", async () => {
+    const path = join(directory, "bad-background.png");
+    await expect(
+      renderScene(resolve("test/fixtures/scenes/invalid-background.mjs"), {
+        outputs: [{ format: "png", path }],
+      }),
+    ).rejects.toMatchObject({
+      code: "SCENE_INVALID",
+      phase: "validate",
+      message: expect.stringContaining(
+        "background is not a supported CSS color",
+      ),
+    });
+    await expect(
+      renderScene(resolve("test/fixtures/scenes/invalid-background.mjs"), {
+        background: "#123456",
+        outputs: [{ format: "png", path }],
+      }),
+    ).resolves.toMatchObject({ outputs: [{ format: "png" }] });
+  });
+
   it("reports which outputs committed if another destination appears during rendering", async () => {
     const first = join(directory, "first.png");
     const second = join(directory, "second.png");

@@ -18,6 +18,7 @@ import {
 } from "skia-canvas";
 
 import { resetPtsStyleCache, toPtsContext } from "./compatibility.js";
+import { CSS_COLOR_HINT, isCSSColor } from "./cssColor.js";
 import { SkiaCanvasError, UnsupportedOperationError } from "./errors.js";
 import { SkiaCanvasForm } from "./SkiaCanvasForm.js";
 import type {
@@ -225,6 +226,17 @@ const rasterOptionKeys = new Set([
 ]);
 const svgOptionKeys = new Set(["outline"]);
 
+function assertCSSColor(value: unknown, name: string): asserts value is string {
+  if (typeof value !== "string") {
+    throw new TypeError(name + " must be a string");
+  }
+  if (!isCSSColor(value)) {
+    throw new TypeError(
+      name + " is not a supported CSS color: " + value + "; " + CSS_COLOR_HINT,
+    );
+  }
+}
+
 function validateRasterExportOptions(
   format: RasterFormat,
   options: RasterExportOptions,
@@ -243,9 +255,7 @@ function validateRasterExportOptions(
     }
   }
 
-  if (options.matte !== undefined && typeof options.matte !== "string") {
-    throw new TypeError("matte must be a string");
-  }
+  if (options.matte !== undefined) assertCSSColor(options.matte, "matte");
 
   if (options.quality !== undefined) {
     if (
@@ -447,6 +457,9 @@ export class SkiaCanvasSpace extends Space {
     assertAllocationDimensions(width, height, this.#allocationLimits);
 
     this.id = options.id || "skia_canvas_" + String(nextSpaceId++);
+    if (options.background !== undefined) {
+      assertCSSColor(options.background, "background");
+    }
     this.#background = options.background ?? "transparent";
     this.#refreshEnabled = options.refresh ?? true;
 
@@ -567,6 +580,7 @@ export class SkiaCanvasSpace extends Space {
 
   set background(value: string) {
     this.#assertUsable();
+    assertCSSColor(value, "background");
     this.#background = value;
   }
 
@@ -737,7 +751,10 @@ export class SkiaCanvasSpace extends Space {
   override clear(background?: string): this {
     this.#assertCanvasMutationAllowed("clear the canvas", true);
 
-    if (background !== undefined) this.#background = background;
+    if (background !== undefined) {
+      assertCSSColor(background, "background");
+      this.#background = background;
+    }
     this.#clearUnsafe();
     return this;
   }
