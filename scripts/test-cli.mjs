@@ -40,7 +40,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function run(args, cwd) {
+function run(args, cwd, { closeStdout = false } = {}) {
   return new Promise((resolveRun, reject) => {
     const child = spawn(process.execPath, [cli, ...args], {
       ...(cwd === undefined ? {} : { cwd }),
@@ -48,6 +48,8 @@ function run(args, cwd) {
     });
     const stdout = [];
     const stderr = [];
+    // Simulate a consumer such as `head` that stops reading immediately.
+    if (closeStdout) child.stdout.destroy();
     child.stdout.on("data", (chunk) => stdout.push(Buffer.from(chunk)));
     child.stderr.on("data", (chunk) => stderr.push(Buffer.from(chunk)));
     child.on("error", reject);
@@ -69,6 +71,25 @@ const temporary = await realpath(
 );
 
 try {
+  const brokenPipe = await run(
+    ["render", scene, "--out", "-", "--format", "png"],
+    undefined,
+    { closeStdout: true },
+  );
+  assert(brokenPipe.code === 0, "closed stdout changed the exit status");
+  assert(
+    !brokenPipe.stderr.toString().includes("EPIPE"),
+    "closed stdout leaked an EPIPE stack trace",
+  );
+  const brokenJsonPipe = await run(["render", scene, "--json"], undefined, {
+    closeStdout: true,
+  });
+  assert(brokenJsonPipe.code === 0, "closed JSON stdout changed the exit");
+  assert(
+    !brokenJsonPipe.stderr.toString().includes("EPIPE"),
+    "closed JSON stdout leaked an EPIPE stack trace",
+  );
+
   const help = await run(["--help"]);
   assert(help.code === 0, "--help failed");
   assert(

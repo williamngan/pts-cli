@@ -110,11 +110,32 @@ function normalizeError(error: unknown): PtsRenderError {
       );
 }
 
+let stdoutClosed = false;
+
+function isBrokenPipe(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | null | undefined)?.code === "EPIPE";
+}
+
+// A consumer such as `head` may close the pipe before the CLI finishes
+// writing. Node reports that as an EPIPE error on stdout; without a listener it
+// becomes an uncaught exception with a stack trace. Later writes are skipped and
+// the exit status reflects the render, not the closed pipe.
+process.stdout.on("error", (error: unknown) => {
+  if (isBrokenPipe(error)) stdoutClosed = true;
+});
+
 function writeStdout(value: string | Buffer): Promise<void> {
+  if (stdoutClosed) return Promise.resolve();
   return new Promise((resolve, reject) => {
     process.stdout.write(value, (error) => {
-      if (error) reject(error);
-      else resolve();
+      if (error === null || error === undefined) {
+        resolve();
+      } else if (isBrokenPipe(error)) {
+        stdoutClosed = true;
+        resolve();
+      } else {
+        reject(error);
+      }
     });
   });
 }
