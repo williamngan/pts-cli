@@ -18,13 +18,14 @@ Usage:
 
 Output:
   -o, --out <path>                 File or trailing-slash directory; repeatable
-                                      (- writes stdout; omit for generated PNG)
+                                      (- writes stdout and needs --format)
                                       (default: pts-output/<source>-<uuid>.png)
   --format <png|jpeg|webp|raw|svg> Generated/stdout/extensionless format
                                       (default for generated output: png)
   --density <integer>              Raster pixels per logical unit
   --quality <0..1>                 JPEG or WebP quality
   --matte <color>                  Raster background beneath transparency
+                                      (named, hex, rgb(), hsl(), hwb() colors)
   --text-mode <preserve|outline>   SVG text behavior
   --force                          Replace existing output files
 
@@ -39,7 +40,7 @@ Code and rendering:
   --events <file.json>             Replay pointer/action/resize events
   --seed <string>                  Seed Pts and worker Math.random
   --params <file.json>             Base render parameters
-  --param <key=value>              Override a parameter; repeatable
+  --param <key=value>              Override a parameter (JSON or string); repeatable
   --asset-root <path|URL>          Base for relative scene assets
   --allow-net                      Permit network asset loading
   --font <family=path>             Register a font; repeatable

@@ -21,7 +21,7 @@ installed command are named `pts-render`.
 
 ## Command line
 
-Node.js 20 or later is required. You can ender a file without installing the
+Node.js 20 or later is required. You can render a file without installing the
 package globally:
 
 ```sh
@@ -43,6 +43,18 @@ npm install --global pts-render
 pts-render drawing.mjs
 ```
 
+skia-canvas downloads its prebuilt native binary in an install script. npm 11
+warns that the script is "not yet covered by allowScripts"; it still runs, and
+`npm install --global --allow-scripts=skia-canvas pts-render` silences the
+warning. Without the script, rendering fails at startup with a missing
+`skia.node`.
+
+With `npx` or a global install, the runner's copy of Pts lives in the npm cache
+or global prefix, so a render file cannot `import` it directly. Use the `Pts`
+namespace passed to `run` instead; it is the runner's own instance. Direct
+imports work only when the file resolves `pts` to the same installation, such as
+a project that installed `pts-render` locally.
+
 ### From this checkout
 
 ```sh
@@ -52,6 +64,9 @@ pnpm build
 node dist/cli.mjs examples/basic-card.mjs \
   --json
 ```
+
+In a shell without a TTY, such as an agent or CI job, set `CI=true` so pnpm can
+replace an existing `node_modules` without prompting.
 
 With no `--out`, this creates a unique PNG such as
 `pts-output/basic-card-550e8400-e29b-41d4-a716-446655440000.png`. To choose
@@ -66,9 +81,14 @@ node dist/cli.mjs examples/basic-card.mjs \
 
 Output directories are created as needed. Existing files are protected unless
 `--force` is supplied. A trailing slash selects a directory and asks the CLI to
-generate the filename; a directory passed without a trailing slash is treated as
-an exact target and rejected. Symlinks, other non-regular targets, and duplicate
-canonical paths are also rejected before scene execution.
+generate the filename; an existing directory passed without a trailing slash is
+rejected with `OUTPUT_TARGET_INVALID` and a hint about the trailing-slash form.
+Symlinks, other non-regular targets, and duplicate canonical paths are also
+rejected before scene execution. `--background` and `--matte` must be colors
+that skia-canvas can parse (named colors, `transparent`, hex, `rgb()`, `hsl()`,
+or `hwb()`); anything else is a usage error rather than a silently wrong color.
+Running `pts-render` with no arguments is also a usage error; `--help` prints
+the option list.
 
 ## Write a render file
 
@@ -101,6 +121,12 @@ pts-render circles.mjs \
   --out circles.png
 ```
 
+`--param` values are parsed as JSON when they are valid JSON and kept as strings
+otherwise, so `--param radius=48` yields the number `48`, `--param flag=true` a
+boolean, `--param 'obj={"a":1}'` an object, and `--param label=hello` the string
+`"hello"`. The example above still coerces with `Number()` so the same file also
+accepts string parameters from a `--params` file or a browser mount.
+
 The canvas is `800x600` with a transparent background when neither the file nor
 the command specifies them. `--size` and `--background` override file values. To
 keep defaults in the file, export a configured object instead:
@@ -113,6 +139,23 @@ export default {
   run,
 };
 ```
+
+`pts-render/scene` exports `defineScene()`, a type-level identity helper. It
+gives the configured object editor completion and type checking (for example,
+`width` and `height` must appear together and unknown keys are flagged) and
+returns it unchanged; runtime validation still happens when the file is rendered
+or mounted:
+
+```js
+import { defineScene } from "pts-render/scene";
+
+export default defineScene({ width: 640, height: 360, run });
+```
+
+It has no Node or skia-canvas dependency, so the same file works in the browser.
+A render file that imports it must be able to resolve `pts-render` from its own
+location; with `npx` or a global install, no local package exists, so prefer a
+plain object or function export there.
 
 ## Quick testing in browser
 
@@ -134,7 +177,50 @@ await mounted.dispose();
 `pts-render/browser` has no Node built-in, skia-canvas, or native dependency
 edge in its module graph. It creates a real Pts CanvasSpace and CanvasForm,
 preserves the same initial resize/start ordering as the Node runner, and owns
-input binding and playback. It intentionally rejects SVGSpace targets.
+input binding and playback. It intentionally rejects SVGSpace targets, and it
+rejects a `target` selector that matches no element instead of letting Pts
+append a new container to the page.
+
+The module imports the bare specifiers `pts-render/browser` and `pts`, so the
+page needs a bundler, an import map, or a CDN that resolves them. Without a
+build step, an import map over a local install works:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "pts-render/browser": "./node_modules/pts-render/dist/browser.mjs",
+      "pts": "./node_modules/pts/dist/index.mjs"
+    }
+  }
+</script>
+```
+
+A CDN that rewrites dependencies, for example
+`https://esm.sh/pts-render@0.1.0/browser`, also resolves `pts` on its own.
+
+`mountScene(scene, options)` accepts:
+
+| Option                   | Purpose                                                                  |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `target`                 | Selector or element for the container (required)                         |
+| `size`                   | `{ width, height }` for a fixed canvas; overrides file values            |
+| `background`             | Canvas background; overrides the file value                              |
+| `resize`                 | Follow the container size; defaults to `true` only when no size is known |
+| `retina`                 | Scale for the device pixel ratio; default `true`                         |
+| `params`                 | Parameter object passed to `run`                                         |
+| `assetBaseURL`           | Base for `assets.*`; defaults to the page                                |
+| `bindMouse`, `bindTouch` | Pointer input; default `true`                                            |
+| `autoplay`               | Start playback after mounting; default `true`                            |
+| `signal`                 | `AbortSignal` that cancels mounting or disposes the scene                |
+| `onWarning`              | Callback for warnings that the result also collects                      |
+
+It resolves to `{ space, form, warnings, dispose }`. When the options or the
+file specify a size, the canvas keeps that size like the Node renderer's; an
+unsized mount fills its container and follows it. Pts measures the container to
+size the canvas, so give each mount its own container that holds nothing else.
+The created canvas is styled `display: block` so that a container without an
+explicit height does not grow a few pixels per resize.
 
 ### Delta from a standard web demo
 
@@ -165,7 +251,7 @@ Core options:
 | Option                             | Purpose                                                                |
 | ---------------------------------- | ---------------------------------------------------------------------- |
 | `-o, --out <path>`                 | Exact file or trailing-`/` directory; repeatable; `-` writes to stdout |
-| `--format <name>`                  | Generated, ambiguous, or stdout format                                 |
+| `--format <name>`                  | Generated, ambiguous, or stdout format; required with `--out -`        |
 | `--loader <auto\|scene\|pts-demo>` | Source interpretation                                                  |
 | `--size <width>x<height>`          | Canvas size; overrides file values; otherwise defaults to `800x600`    |
 | `--background <color>`             | Canvas background; overrides file value; otherwise transparent         |
@@ -215,7 +301,12 @@ pts-render scene.mjs --out renders/ --format webp --json
 
 The second form creates a unique file inside `renders/`. A bare `--out` remains
 an error; omit it to use `pts-output/`. Multiple outputs still require repeated
-explicit `--out` destinations.
+explicit `--out` destinations. `--out -` streams one output to stdout and has no
+extension to infer from, so it always needs `--format`:
+
+```sh
+pts-render scene.mjs --out - --format png > scene.png
+```
 
 Other effective defaults are:
 
@@ -304,13 +395,18 @@ Success writes one JSON object to stdout:
 }
 ```
 
-Failures use
-`{ "ok": false, "error": { "code", "phase", "message", "cause"? } }` and retain
-a bounded cause chain without stacks by default. `--debug` adds worker and cause
-stacks. Exit groups are stable: 2 for usage/validation, 3 for source or
-compatibility, 4 for render-file initialization/input/frame/cleanup, 5 for
-export/commit, 6 for native/environment, 124 for timeout, and 130 for SIGINT.
-`--json` cannot be combined with `--out -`.
+The example is abridged: the real record also carries `source`, `render` (clock
+facts), `random` (seed facts), `runtime` (Node, Pts, skia-canvas, and renderer
+facts), `warnings`, captured `logs`, and `durationMs`. `renderScene()` returns
+the same fields except `renderId`, which the CLI assigns for its generated
+filenames. Failures use
+`{ "ok": false, "error": { "code", "phase", "message", "cause"? } }` plus
+`schemaVersion` and, once assigned, `renderId`, and retain a bounded cause chain
+without stacks by default. `--debug` adds worker and cause stacks. Exit groups
+are stable: 2 for usage/validation, 3 for source or compatibility, 4 for
+render-file initialization/input/frame/cleanup, 5 for export/commit, 6 for
+native/environment, 124 for timeout, and 130 for SIGINT. `--json` cannot be
+combined with `--out -`.
 
 ## Programmatic one-shot API
 
@@ -407,7 +503,12 @@ const svg = await space.toBuffer("svg", { outline: true });
 
 In the CLI/API, `textMode: "preserve"` retains text where Skia can do so;
 `"outline"` converts glyphs to paths for more self-contained geometry. Embedded
-raster images remain raster data inside the SVG.
+raster images remain raster data inside the SVG. Preserved text names the font
+Skia actually used, not the CSS family the scene asked for: a font registered as
+`"Project Sans"` from a DejaVu file is written as `font-family="DejaVu Serif"`,
+and a generic `sans-serif` becomes the resolved system face. A viewer without
+that font substitutes its own, so `outline` is the portable choice when the SVG
+leaves the machine that rendered it.
 
 Skia's SVG encoder omits Canvas-filtered drawing commands. If a scene sets a
 non-`none` Canvas `filter`, the adapter preserves the complete drawing by

@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.1.1 - Unreleased
+
+### Fixed
+
+- A consumer that closes stdout early, such as `head`, no longer produces an
+  unhandled EPIPE stack trace and exit status 1; the CLI stops writing and keeps
+  the render's exit status.
+- `--background`, `--matte`, `renderScene()` background/matte options,
+  scene-file backgrounds, and `SkiaCanvasSpace` colors are validated against the
+  syntax skia-canvas accepts. Previously an unparseable color such as
+  `notacolor` or a hex value missing its `#` rendered with an arbitrary color or
+  silently disabled the matte.
+- `--out somedir` for an existing directory now reports `OUTPUT_TARGET_INVALID`
+  with a trailing-slash hint instead of "Cannot infer output format".
+- `pts-render` with no arguments is a usage error (exit 2) that points at
+  `--help` instead of printing help with exit 0.
+- `mountScene()` keeps an explicit `size` or the scene file's width/height
+  instead of letting the default `resize: true` replace it with the container
+  size on the first ResizeObserver tick; `resize` now defaults to `true` only
+  when no size is known.
+- `mountScene()` styles the canvas it creates `display: block`, which stops the
+  canvas from growing a few pixels per resize cycle in a container without an
+  explicit height.
+- `mountScene()` rejects a `target` selector that matches no element instead of
+  letting Pts append a new container to `<body>`.
+
+### Changed
+
+- `--help` notes that `--out -` needs `--format`, lists the accepted color
+  forms, and documents `--param` value parsing.
+- `pts-output/` is ignored by Git.
+
+### Documentation
+
+- Fixed the "ender a file" typo, documented `pts-render/scene` and
+  `defineScene()`, explained that `npx` and global installs require the `Pts`
+  namespace from `run` rather than a direct `pts` import, described
+  bare-specifier resolution and every `mountScene()` option for browser use,
+  documented `--param` JSON parsing, `--out -` needing `--format`, the full JSON
+  result shape, preserved-SVG font naming, npm 11's install-scripts warning, and
+  `CI=true` for non-TTY pnpm installs.
+- The site's "ecosystem guide" link points at the Pts ecosystem guide.
+
 ## 0.1.0 - 2026-09-12
 
 ### Added

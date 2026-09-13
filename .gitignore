@@ -3,6 +3,7 @@ dist/
 node_modules/
 .pnpm-store/
 out/
+pts-output/
 *.tgz
 *.tsbuildinfo
 temp/
