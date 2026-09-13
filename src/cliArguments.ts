@@ -526,8 +526,16 @@ export async function parseCLIArguments(
   argv: readonly string[],
 ): Promise<ParsedCLI> {
   const raw = tokenize(argv);
-  if (raw.booleans.has("help") || argv.length === 0) return { command: "help" };
+  if (raw.booleans.has("help")) return { command: "help" };
   if (raw.booleans.has("version")) return { command: "version" };
+  if (argv.length === 0) {
+    throw new PtsRenderError(
+      "CLI_USAGE",
+      "arguments",
+      "Usage: pts-render <source> [--out <destination>]",
+      { hint: "Run pts-render --help for the full option list." },
+    );
+  }
 
   const explicitRender = raw.positionals[0] === "render";
   const source = explicitRender ? raw.positionals[1] : raw.positionals[0];

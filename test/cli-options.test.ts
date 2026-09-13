@@ -216,7 +216,13 @@ describe("CLI option contract", () => {
         render: { mode: "direct", time: 12.5 },
       },
     });
-    await expect(parseCLIArguments([])).resolves.toEqual({ command: "help" });
+    await expect(parseCLIArguments([])).rejects.toMatchObject({
+      code: "CLI_USAGE",
+      hint: expect.stringContaining("--help"),
+    });
+    await expect(parseCLIArguments(["--help"])).resolves.toEqual({
+      command: "help",
+    });
     await expect(parseCLIArguments(["--version"])).resolves.toEqual({
       command: "version",
     });

@@ -90,6 +90,15 @@ try {
     "closed JSON stdout leaked an EPIPE stack trace",
   );
 
+  const noArguments = await run([]);
+  assert(
+    noArguments.code === 2,
+    "no-argument invocation must be a usage error",
+  );
+  assert(
+    noArguments.stderr.toString().includes("--help"),
+    "no-argument invocation must point at --help",
+  );
   const help = await run(["--help"]);
   assert(help.code === 0, "--help failed");
   assert(
